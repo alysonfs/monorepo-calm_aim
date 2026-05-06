@@ -46,10 +46,10 @@
 
 | Decisão | Opções | Status |
 |---|---|---|
-| Framework HTTP (Backend) | Express vs Fastify | Pendente |
-| ODM MongoDB | Mongoose vs MongoDB driver nativo | Pendente |
+| Framework HTTP (Backend) | Express | Definido |
+| ODM MongoDB | Mongoose | Definido |
 | Cliente Cassandra | cassandra-driver (DataStax) | Definido |
-| Classificador emocional | Rule-based vs modelo ML leve | Pendente (começar rule-based) |
+| Classificador emocional | Rule-based | Definido |
 | Algoritmo de sugestão de gatilho | Comparação estatística R1 vs R2 por sessão | Pendente |
 | Autenticação social | Google / Discord OAuth (futuro) | Backlog |
 | Deploy produção | Fly.io / Railway / VPS | Backlog |
