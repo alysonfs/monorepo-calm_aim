@@ -7,3 +7,4 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ### Added
 - Setup inicial do projeto: estrutura de agentes, skills e documentação.
+- Adicionadas definições completas dos agentes `front` e `workspace` em `.github/agents/`.
