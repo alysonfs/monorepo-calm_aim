@@ -1,0 +1,5 @@
+{
+  "extends": "@calm-aim/typescript-config/node.json",
+  "include": ["vite.config.ts"],
+  "exclude": ["node_modules"]
+}

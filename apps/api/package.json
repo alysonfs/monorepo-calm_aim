@@ -1,0 +1,24 @@
+{
+  "name": "@calm-aim/api",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@calm-aim/types": "*",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "@calm-aim/eslint-config": "*",
+    "@calm-aim/typescript-config": "*",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.7",
+    "typescript": "^5.7.3",
+    "tsx": "^4.19.2"
+  }
+}
