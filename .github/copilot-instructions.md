@@ -4,6 +4,19 @@ Estas diretrizes se aplicam a **todo o workspace** e definem como o GitHub Copil
 
 ---
 
+## Raiz do Projeto
+
+**CRÍTICO — leia antes de qualquer operação de arquivo ou terminal:**
+
+> O diretório raiz do projeto é **`/Users/alysonfs/workspace/Software/calm_aim`**.
+
+- Todos os agentes e subagentes **devem operar neste diretório**.
+- Nunca use worktrees (`calm_aim.worktrees/…`) como destino de criação de arquivos ou commits.
+- Quando receber um caminho relativo (ex.: `apps/api`), resolva-o como `/Users/alysonfs/workspace/Software/calm_aim/apps/api`.
+- Antes de criar, editar ou executar qualquer comando, confirme que o `pwd` é `/Users/alysonfs/workspace/Software/calm_aim`.
+
+---
+
 ## Princípios Fundamentais
 
 Todo código produzido neste projeto deve seguir quatro pilares inegociáveis:
