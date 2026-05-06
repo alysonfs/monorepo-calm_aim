@@ -73,15 +73,17 @@ Presentation  →  Application (Use Cases)  →  Domain  ←  Infrastructure
 
 ## Stack do Projeto
 
-> A ser preenchido conforme a stack for definida.
-
-- **Linguagem:**
-- **Framework principal:**
-- **Banco de dados:**
-- **ORM / Query Builder:**
-- **Autenticação:**
-- **Mensageria / Filas:**
-- **Infraestrutura / Deploy:**
+- **Linguagem:** TypeScript (todos os apps e packages)
+- **Frontend:** React + Vite + Three.js; Web Audio API (análise de voz local)
+- **Backend:** Node.js + Express
+- **Banco de dados:** MongoDB (usuários/sessões) + Cassandra (séries temporais de sensores) + Redis (cache/tempo real)
+- **ODM / Drivers:** Mongoose (MongoDB), cassandra-driver DataStax (Cassandra), ioredis (Redis)
+- **Autenticação:** JWT — access token (15min) + refresh token (7d) com rotação
+- **Monorepo:** Turborepo com npm workspaces
+- **Collector:** Node.js + hidapi/dualsense-ts + ws (roda fora do Docker)
+- **Infraestrutura local:** Docker Compose (web, api, mongo, cassandra, redis)
+- **CI/CD:** GitHub Actions com cache do Turborepo
+- **Deploy produção:** não definido (backlog)
 
 ---
 
