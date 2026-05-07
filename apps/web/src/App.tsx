@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import * as THREE from 'three';
+import { useEffect, useRef } from "react";
+import * as THREE from "three";
 
 export default function App() {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -14,7 +14,7 @@ export default function App() {
       75,
       mount.clientWidth / mount.clientHeight,
       0.1,
-      1000
+      1000,
     );
     camera.position.z = 5;
 
@@ -48,7 +48,7 @@ export default function App() {
   return (
     <div
       ref={mountRef}
-      style={{ width: '100vw', height: '100vh', background: '#000' }}
+      style={{ width: "100vw", height: "100vh", background: "#000" }}
     />
   );
 }

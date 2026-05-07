@@ -1,14 +1,14 @@
-import { WebSocketServer, WebSocket } from 'ws';
-import type { EventoDualSense } from '@calm-aim/types';
+import { WebSocketServer, WebSocket } from "ws";
+import type { EventoDualSense } from "@calm-aim/types";
 
-const PORT = Number(process.env['COLLECTOR_PORT'] ?? 3002);
+const PORT = Number(process.env["COLLECTOR_PORT"] ?? 3002);
 
 const wss = new WebSocketServer({ port: PORT });
 
 console.log(`[collector] WebSocket server escutando na porta ${PORT}`);
 
-wss.on('connection', (ws: WebSocket) => {
-  console.log('[collector] Cliente conectado');
+wss.on("connection", (ws: WebSocket) => {
+  console.log("[collector] Cliente conectado");
 
   const interval = setInterval(() => {
     const evento: EventoDualSense = {
@@ -23,13 +23,13 @@ wss.on('connection', (ws: WebSocket) => {
     }
   }, 100);
 
-  ws.on('close', () => {
+  ws.on("close", () => {
     clearInterval(interval);
-    console.log('[collector] Cliente desconectado');
+    console.log("[collector] Cliente desconectado");
   });
 
-  ws.on('error', (err) => {
+  ws.on("error", (err) => {
     clearInterval(interval);
-    console.error('[collector] Erro no cliente:', err.message);
+    console.error("[collector] Erro no cliente:", err.message);
   });
 });
