@@ -18,6 +18,7 @@ npm install
 ## Infraestrutura (MongoDB + Cassandra + Redis)
 
 ```bash
+# Lembrar que nosso docker server é o Colima
 docker compose up -d
 ```
 
