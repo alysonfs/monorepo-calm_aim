@@ -12,8 +12,8 @@ Adultos que amam jogar FPS perdem performance com o tempo e consideram abandonar
 
 | Marco | Descrição | Status |
 |-------|-----------|--------|
-| M0 | Monorepo + infra local rodando | 🔵 Em andamento |
-| M1 | Login + sessão de treino registrada no banco | ⚪ Não iniciado |
+| M0 | Monorepo + infra local rodando | ✅ Concluído |
+| M1 | Login + sessão de treino registrada no banco | 🔵 Em andamento |
 | M2 | Primeiro treino jogável + dados do DualSense ao vivo | ⚪ Não iniciado |
 | M3 | Motor adaptativo + análise emocional por voz | ⚪ Não iniciado |
 
@@ -21,28 +21,28 @@ Adultos que amam jogar FPS perdem performance com o tempo e consideram abandonar
 
 ## M0 — Setup do Monorepo
 
-**Status:** 🔵 Em andamento
+**Status:** ✅ Concluído
 **Critério de conclusão:** `docker compose up` sobe todos os serviços sem erros; `turbo run build` compila sem erros de tipo; `turbo run lint` passa; CI executa em push.
 
 ### Tarefas
 
-- [ ] Inicializar Turborepo (`npx create-turbo@latest`) e adaptar estrutura ao projeto
-- [ ] Criar `apps/web` — React + Vite + TypeScript + Three.js (placeholder de tela)
-- [ ] Criar `apps/api` — Node.js + Express + TypeScript (health check endpoint)
-- [ ] Criar `apps/collector` — Node.js + ws + TypeScript (WebSocket placeholder, sem HID ainda)
-- [ ] Criar `packages/typescript-config` — tsconfigs base: `base`, `react`, `node`
-- [ ] Criar `packages/eslint-config` — ESLint + Prettier compartilhado
-- [ ] Criar `packages/types` — contratos compartilhados: `EventoDualSense`, `SessaoTreino`, `EstadoEmocional`
-- [ ] Docker Compose — services `web`, `api`, `mongo`, `cassandra`, `redis` com volumes e health checks
-- [ ] `.env.example` por app (sem segredos hardcoded)
-- [ ] GitHub Actions — pipeline com `lint → typecheck → build → test` usando cache do Turborepo
-- [ ] `README.md` raiz — pré-requisitos, `docker compose up`, como rodar o collector manualmente
+- [x] Inicializar Turborepo (`npx create-turbo@latest`) e adaptar estrutura ao projeto
+- [x] Criar `apps/web` — React + Vite + TypeScript + Three.js (placeholder de tela)
+- [x] Criar `apps/api` — Node.js + Express + TypeScript (health check endpoint)
+- [x] Criar `apps/collector` — Node.js + ws + TypeScript (WebSocket placeholder, sem HID ainda)
+- [x] Criar `packages/typescript-config` — tsconfigs base: `base`, `react`, `node`
+- [x] Criar `packages/eslint-config` — ESLint + Prettier compartilhado
+- [x] Criar `packages/types` — contratos compartilhados: `EventoDualSense`, `SessaoTreino`, `EstadoEmocional`
+- [x] Docker Compose — services `web`, `api`, `mongo`, `cassandra`, `redis` com volumes e health checks
+- [x] `.env.example` por app (sem segredos hardcoded)
+- [x] GitHub Actions — pipeline com `lint → typecheck → build → test` usando cache do Turborepo
+- [x] `README.md` raiz — pré-requisitos, `docker compose up`, como rodar o collector manualmente
 
 ---
 
 ## M1 — Primeiro Protótipo Vivo
 
-**Status:** ⚪ Não iniciado
+**Status:** 🔵 Em andamento
 **Critério de conclusão:** usuário consegue criar conta, fazer login e ter uma sessão de treino registrada no MongoDB via frontend.
 **Depende de:** M0 concluído.
 
