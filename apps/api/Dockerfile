@@ -20,6 +20,10 @@ COPY apps/api/ ./apps/api/
 WORKDIR /app/apps/api
 RUN npm run build
 
+# Remove devDependencies antes de copiar para o runner
+WORKDIR /app
+RUN npm prune --omit=dev
+
 # ---- runner ----
 FROM node:20-alpine AS runner
 WORKDIR /app
@@ -28,9 +32,8 @@ RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nodejs
 
 COPY --from=builder /app/apps/api/dist ./dist
-COPY --from=builder /app/apps/api/package*.json ./
-
-RUN npm ci --omit=dev
+COPY --from=builder /app/apps/api/package.json ./package.json
+COPY --from=builder /app/node_modules ./node_modules
 
 USER nodejs
 
