@@ -1,5 +1,6 @@
 export interface EventoDualSense {
   timestamp: number;
+  conectado: boolean;
   acelerometro: { x: number; y: number; z: number };
   giroscopio: { x: number; y: number; z: number };
   botoes: Record<string, boolean>;
