@@ -7,29 +7,104 @@ const wss = new WebSocketServer({ port: PORT });
 
 console.log(`[collector] WebSocket server escutando na porta ${PORT}`);
 
-wss.on("connection", (ws: WebSocket) => {
-  console.log("[collector] Cliente conectado");
+function eventoZero(): EventoDualSense {
+  return {
+    timestamp: Date.now(),
+    conectado: false,
+    acelerometro: { x: 0, y: 0, z: 0 },
+    giroscopio: { x: 0, y: 0, z: 0 },
+    botoes: {},
+  };
+}
 
-  const interval = setInterval(() => {
-    const evento: EventoDualSense = {
-      timestamp: Date.now(),
-      acelerometro: { x: 0, y: 0, z: 0 },
-      giroscopio: { x: 0, y: 0, z: 0 },
-      botoes: {},
-    };
+let ultimoEvento: EventoDualSense = eventoZero();
 
-    if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify(evento));
+function broadcast(evento: EventoDualSense): void {
+  ultimoEvento = evento;
+  const payload = JSON.stringify(evento);
+  for (const client of wss.clients) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(payload);
     }
-  }, 100);
+  }
+}
 
-  ws.on("close", () => {
-    clearInterval(interval);
-    console.log("[collector] Cliente desconectado");
-  });
+async function tentarConectarDualSense(): Promise<void> {
+  try {
+    const { Dualsense } = await import("dualsense-ts");
+    const controller = new Dualsense();
+
+    console.log("[collector] DualSense instanciado, aguardando conexão...");
+
+    controller.on("input", (ctrl) => {
+      const evento: EventoDualSense = {
+        timestamp: Date.now(),
+        conectado: ctrl.connection.active,
+        acelerometro: {
+          x: ctrl.accelerometer.x.state,
+          y: ctrl.accelerometer.y.state,
+          z: ctrl.accelerometer.z.state,
+        },
+        giroscopio: {
+          x: ctrl.gyroscope.x.state,
+          y: ctrl.gyroscope.y.state,
+          z: ctrl.gyroscope.z.state,
+        },
+        botoes: {
+          cross: ctrl.cross.state,
+          circle: ctrl.circle.state,
+          square: ctrl.square.state,
+          triangle: ctrl.triangle.state,
+          l1: ctrl.left.bumper.state,
+          r1: ctrl.right.bumper.state,
+          l3: ctrl.left.analog.button.state,
+          r3: ctrl.right.analog.button.state,
+          options: ctrl.options.state,
+          create: ctrl.create.state,
+          ps: ctrl.ps.state,
+          dpadUp: ctrl.dpad.up.state,
+          dpadDown: ctrl.dpad.down.state,
+          dpadLeft: ctrl.dpad.left.state,
+          dpadRight: ctrl.dpad.right.state,
+        },
+      };
+      broadcast(evento);
+    });
+
+    controller.connection.on("change", ({ active }) => {
+      console.log(
+        `[collector] DualSense ${active ? "conectado" : "desconectado"}`,
+      );
+      if (!active) {
+        broadcast(eventoZero());
+      }
+    });
+  } catch (err) {
+    console.warn(
+      "[collector] Falha ao conectar DualSense, usando fallback zeros:",
+      (err as Error).message,
+    );
+    setTimeout(() => void tentarConectarDualSense(), 5000);
+  }
+}
+
+setInterval(() => {
+  if (!ultimoEvento.conectado) {
+    broadcast(eventoZero());
+  }
+}, 100);
+
+wss.on("connection", (ws: WebSocket) => {
+  console.log("[collector] Cliente WebSocket conectado");
+  ws.send(JSON.stringify(ultimoEvento));
 
   ws.on("error", (err) => {
-    clearInterval(interval);
     console.error("[collector] Erro no cliente:", err.message);
   });
+
+  ws.on("close", () => {
+    console.log("[collector] Cliente WebSocket desconectado");
+  });
 });
+
+void tentarConectarDualSense();
