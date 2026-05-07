@@ -26,6 +26,47 @@
 
 ---
 
+## [2026-05-07] Metodologia de desenvolvimento: TDD + LLM + SOLID
+
+**Contexto:** O projeto usa LLMs (GitHub Copilot) para gerar código e acelerar o desenvolvimento. Sem disciplina, a geração de código por IA tende a produzir handlers monolíticos, lógica acoplada ao framework, e zero testabilidade — o oposto do que queremos.
+
+**Decisão:** Adotar **TDD + SOLID como contrato inegociável** para qualquer código gerado, humano ou por IA. O fluxo padrão é:
+
+1. **Interface primeiro** — defina o contrato do repositório ou serviço antes da implementação.
+2. **Use case puro** — lógica de negócio em funções ou classes que recebem dependências por parâmetro/injeção. Sem `import` de Mongoose, Express ou banco dentro do use case.
+3. **Teste antes (ou junto)** — escreva o teste unitário no mesmo momento que o use case. O teste usa mocks simples do repositório. Nenhum use case existe sem teste.
+4. **Repositório como adapter** — a implementação concreta (Mongoose, Redis) fica isolada em `repositories/`. Testada separadamente com mocks dos models.
+5. **Route como thin handler** — controller só faz: parse do body → resolve dependência → chama use case → mapeia erro para status HTTP.
+
+**Princípios SOLID aplicados:**
+- **S** — cada use case tem uma única responsabilidade (ex.: `registerUsuario` só registra).
+- **O** — novos comportamentos = novos use cases, sem modificar os existentes.
+- **L** — repositórios implementam interfaces; qualquer impl substitui outra sem quebrar o use case.
+- **I** — interfaces de repositório são segregadas por use case (`RegisterUsuarioRepo`, `LoginUsuarioRepo`).
+- **D** — use cases dependem de interfaces, nunca de classes concretas ou ORMs.
+
+**Regras para o LLM (Copilot):**
+- Nunca gerar handler com lógica de negócio embutida. Se o handler tem `bcrypt` ou `jwt`, está errado.
+- Toda instrução para o agente `@backend` deve exigir: use case separado + teste unitário + repositório como interface.
+- O agente deve rodar `typecheck`, `lint` e `test` antes de reportar como concluído.
+- Nenhum código novo entra no repositório sem testes passando no CI.
+
+**Consequência:** Velocidade inicial ligeiramente menor, mas cada incremento é seguro. O Copilot passa a ser um acelerador dentro de um sistema com invariantes testadas — não uma fonte de débito técnico.
+
+---
+
+## [2026-05-07] tsyringe como container de injeção de dependência
+
+**Contexto:** Com use cases puros e repositórios como interfaces, precisamos de um mecanismo para resolver dependências nas routes sem acoplamento direto às implementações concretas. Passar o repo manualmente em cada route é verboso e dificulta a troca de implementações.
+
+**Decisão:** `tsyringe` como DI container. Repositórios registrados com tokens de interface; routes resolvem via `container.resolve(TOKEN)`. Em testes, o container é reconfigurado com mocks.
+
+**Alternativas descartadas:** InversifyJS (mais pesado, API mais verbosa); DI manual nas routes (funciona, mas não escala); NestJS (framework completo, muda demais o shape do projeto).
+
+**Consequência:** `experimentalDecorators` e `emitDecoratorMetadata` habilitados no tsconfig. `reflect-metadata` importado no entry point antes de qualquer outro import. Classes de repositório decoradas com `@injectable()`. Custo: decoradores são Stage 3 no TC39 mas não Stage 4 — risco gerenciável com lock de versão do TypeScript.
+
+---
+
 ## [2026-05-06] Estrutura de documentação em `docs/`
 
 **Contexto:** Projeto no início, necessidade de manter contexto organizado entre sessões sem desperdiçar tokens repetindo informações já conhecidas.
