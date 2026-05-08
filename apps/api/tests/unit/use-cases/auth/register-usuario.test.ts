@@ -3,8 +3,8 @@ import {
   EmailInvalidoError,
   SenhaInvalidaError,
   EmailJaCadastradoError,
-} from "./register-usuario";
-import type { RegisterUsuarioRepo } from "./register-usuario";
+} from "../../../../src/use-cases/auth/register-usuario";
+import type { RegisterUsuarioRepo } from "../../../../src/use-cases/auth/register-usuario";
 
 const makeRepo = (emailExiste = false): RegisterUsuarioRepo => ({
   emailExiste: jest.fn().mockResolvedValue(emailExiste),

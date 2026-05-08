@@ -1,6 +1,6 @@
 import "reflect-metadata";
 
-jest.mock("../models/Sessao.js", () => ({
+jest.mock("../../../src/models/Sessao.js", () => ({
   Sessao: {
     create: jest.fn(),
     findById: jest.fn(),
@@ -15,9 +15,9 @@ jest.mock("mongoose", () => ({
   },
 }));
 
-import { Sessao } from "../models/Sessao.js";
+import { Sessao } from "../../../src/models/Sessao.js";
 import { Types } from "mongoose";
-import { SessaoMongoRepo } from "./sessao-mongo-repo";
+import { SessaoMongoRepo } from "../../../src/repositories/sessao-mongo-repo";
 
 const mockSessao = Sessao as jest.Mocked<typeof Sessao>;
 const mockIsValid = Types.ObjectId.isValid as jest.Mock;

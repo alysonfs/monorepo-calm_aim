@@ -1,6 +1,6 @@
 import "reflect-metadata";
 
-jest.mock("../models/Usuario.js", () => ({
+jest.mock("../../../src/models/Usuario.js", () => ({
   Usuario: {
     exists: jest.fn(),
     create: jest.fn(),
@@ -10,8 +10,8 @@ jest.mock("../models/Usuario.js", () => ({
   },
 }));
 
-import { Usuario } from "../models/Usuario.js";
-import { UsuarioMongoRepo } from "./usuario-mongo-repo";
+import { Usuario } from "../../../src/models/Usuario.js";
+import { UsuarioMongoRepo } from "../../../src/repositories/usuario-mongo-repo";
 
 const mockUsuario = Usuario as jest.Mocked<typeof Usuario>;
 

@@ -1,4 +1,4 @@
-import { loginUsuario, CredenciaisInvalidasError } from "./login-usuario";
+import { loginUsuario, CredenciaisInvalidasError } from "../../../../src/use-cases/auth/login-usuario";
 import bcrypt from "bcrypt";
 
 const passwordHash = bcrypt.hashSync("senha123", 1);

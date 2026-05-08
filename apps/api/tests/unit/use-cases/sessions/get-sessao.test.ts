@@ -2,7 +2,7 @@ import {
   getSessao,
   SessaoNaoEncontradaError,
   AcessoNegadoError,
-} from "./get-sessao";
+} from "../../../../src/use-cases/sessions/get-sessao";
 
 const makeRepo = (
   sessao: { userId: string; [key: string]: unknown } | null,

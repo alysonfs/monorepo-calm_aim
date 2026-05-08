@@ -1,4 +1,4 @@
-import { createSessao, ModoInvalidoError } from "./create-sessao";
+import { createSessao, ModoInvalidoError } from "../../../../src/use-cases/sessions/create-sessao";
 
 const makeRepo = () => ({
   criar: jest.fn().mockResolvedValue({ id: "1", modo: "livre", userId: "u1" }),

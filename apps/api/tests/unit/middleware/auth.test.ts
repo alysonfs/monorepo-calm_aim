@@ -1,4 +1,4 @@
-import { requireAuth } from "./auth";
+import { requireAuth } from "../../../src/middleware/auth";
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 
