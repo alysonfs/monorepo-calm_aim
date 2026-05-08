@@ -10,7 +10,7 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "@calm-aim/types": "*",
+    "@calm-aim/core": "*",
     "dualsense-ts": "^6.15.0",
     "node-hid": "^3.3.0",
     "ws": "^8.18.0"

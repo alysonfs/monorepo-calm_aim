@@ -1,5 +1,5 @@
 import { WebSocketServer, WebSocket } from "ws";
-import type { EventoDualSense } from "@calm-aim/types";
+import type { EventoDualSense } from "@calm-aim/core";
 
 const PORT = Number(process.env["COLLECTOR_PORT"] ?? 3002);
 

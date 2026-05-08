@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { EventoDualSense } from "@calm-aim/types";
+import type { EventoDualSense } from "@calm-aim/core";
 
 export default function Debug() {
   const [evento, setEvento] = useState<EventoDualSense | null>(null);

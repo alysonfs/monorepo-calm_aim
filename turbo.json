@@ -18,6 +18,10 @@
     },
     "test": {
       "outputs": []
+    },
+    "test:integration": {
+      "outputs": ["coverage/**"],
+      "cache": false
     }
   }
 }

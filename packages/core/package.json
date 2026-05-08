@@ -1,5 +1,5 @@
 {
-  "name": "@calm-aim/types",
+  "name": "@calm-aim/core",
   "version": "0.0.0",
   "private": true,
   "main": "src/index.ts",
