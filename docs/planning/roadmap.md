@@ -13,7 +13,7 @@ Adultos que amam jogar FPS perdem performance com o tempo e consideram abandonar
 | Marco | Descrição | Status |
 |-------|-----------|--------|
 | M0 | Monorepo + infra local rodando | ✅ Concluído |
-| M1 | Login + sessão de treino registrada no banco | 🔵 Em andamento |
+| M1 | Login + sessão de treino registrada no banco | ✅ Concluído |
 | M2 | Primeiro treino jogável + dados do DualSense ao vivo | ⚪ Não iniciado |
 | M3 | Motor adaptativo + análise emocional por voz | ⚪ Não iniciado |
 
@@ -42,26 +42,27 @@ Adultos que amam jogar FPS perdem performance com o tempo e consideram abandonar
 
 ## M1 — Primeiro Protótipo Vivo
 
-**Status:** 🔵 Em andamento
+**Status:** ✅ Concluído
 **Critério de conclusão:** usuário consegue criar conta, fazer login e ter uma sessão de treino registrada no MongoDB via frontend.
 **Depende de:** M0 concluído.
 
 ### Backend (`apps/api`)
 
-- [ ] Modelo `Usuario` — email, passwordHash, refreshToken, preferences
-- [ ] Modelo `Sessao` — userId, startedAt, endedAt, modo, status
-- [ ] `POST /auth/register` — cria usuário com senha hasheada (bcrypt)
-- [ ] `POST /auth/login` — retorna access token (15min) + refresh token (7d)
-- [ ] `POST /auth/refresh` — rotaciona refresh token
-- [ ] `POST /sessions` — cria sessão vinculada ao usuário autenticado
-- [ ] `GET /sessions/:id` — retorna sessão por ID
+- [x] Modelo `Usuario` — email, passwordHash, refreshToken, preferences
+- [x] Modelo `Sessao` — userId, startedAt, endedAt, modo, status
+- [x] `POST /auth/register` — cria usuário com senha hasheada (bcrypt)
+- [x] `POST /auth/login` — retorna access token (15min) + refresh token (7d)
+- [x] `POST /auth/refresh` — rotaciona refresh token
+- [x] `POST /sessions` — cria sessão vinculada ao usuário autenticado
+- [x] `GET /sessions/:id` — retorna sessão por ID
+- [x] `GET /sessions` — lista sessões do usuário autenticado
 
 ### Frontend (`apps/web`)
 
-- [ ] Tela de login e cadastro
-- [ ] Dashboard com lista de sessões do usuário
-- [ ] Canvas Three.js (cenário placeholder — cubo girando é suficiente)
-- [ ] HTTP client com interceptor de refresh automático de token
+- [x] Tela de login e cadastro
+- [x] Dashboard com lista de sessões do usuário
+- [x] Canvas Three.js (cenário placeholder — cubo girando é suficiente)
+- [x] HTTP client com interceptor de refresh automático de token
 
 ### Collector (`apps/collector`)
 

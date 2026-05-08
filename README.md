@@ -50,6 +50,38 @@ npm run build
 npm run lint && npm run typecheck
 ```
 
+## Como Testar
+
+Guia passo a passo para subir tudo e ver funcionando (infra, seed, web, API):
+[docs/wiki/como-testar.md](docs/wiki/como-testar.md)
+
+## Testes
+
+```bash
+# Unitários
+npx turbo run test
+
+# Integração (requer MongoMemoryServer)
+npx turbo run test:integration --filter=@calm-aim/api
+```
+
+> Documentação completa: [docs/wiki/testes.md](docs/wiki/testes.md)
+
+## Versões e Compatibilidade
+
+Versões exatas de todas as dependências, imagens Docker, binários e matriz de suporte por plataforma:
+[docs/wiki/versoes-e-compatibilidade.md](docs/wiki/versoes-e-compatibilidade.md)
+
+## Banco de Dados
+
+Connection strings, collections e como inspecionar MongoDB, Redis e Cassandra:
+[docs/wiki/banco-de-dados.md](docs/wiki/banco-de-dados.md)
+
+## Docker
+
+Referência de comandos Docker e Docker Compose (Colima, rebuild, logs, limpeza):
+[docs/wiki/docker.md](docs/wiki/docker.md)
+
 ## Estrutura
 
 ```

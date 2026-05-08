@@ -74,3 +74,17 @@
 **Decisão:** Adotar `docs/` estruturado em quatro contextos: `planning/`, `requirements/`, `diagrams/`, `wiki/`. O Copilot lê os arquivos relevantes ao invés de perguntar ao usuário ou inferir.
 
 **Consequência:** Contexto persistente e reutilizável entre conversas. Custo de manutenção: manter os arquivos atualizados conforme o projeto evolui.
+
+---
+
+## [2026-05-08] Contrato de campos HTTP definido pelo package `@calm-aim/core`
+
+**Contexto:** O frontend enviava `{ email, senha }` no body do login/register enquanto a API esperava `{ email, password }`. O erro passou despercebido porque os dois lados foram desenvolvidos de forma independente, sem um contrato compartilhado entre eles.
+
+**Decisão:** Todos os tipos de request/response HTTP que cruzam a fronteira frontend↔API **devem ser definidos em `packages/core/`** e importados pelos dois lados. Nenhum campo de body de request pode ser inferido por convenção — ele precisa estar tipado em uma interface compartilhada (ex.: `LoginRequest`, `RegisterRequest`, `AuthResponse`).
+
+O package `@calm-aim/core` centraliza também entidades de domínio, enums, value objects e qualquer conceito central da aplicação compartilhado entre apps.
+
+O agente `@backend` ao criar um endpoint e o agente `@front` ao consumir um endpoint devem, ambos, referenciar o tipo de `@calm-aim/core`. Se o tipo não existir, criá-lo antes de implementar.
+
+**Consequência:** Qualquer divergência de campo vira erro de compilação TypeScript em ambos os apps, antes de qualquer teste ou build Docker. Custo: disciplina de manter `packages/core/` atualizado a cada novo endpoint.
