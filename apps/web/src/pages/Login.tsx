@@ -99,11 +99,14 @@ export default function Login() {
     setLoading(true);
     try {
       if (mode === "login") {
-        const { data } = await api.post("/auth/login", { email, senha });
+        const { data } = await api.post("/auth/login", {
+          email,
+          password: senha,
+        });
         login(data.accessToken, data.refreshToken);
         navigate("/dashboard", { replace: true });
       } else {
-        await api.post("/auth/register", { email, senha });
+        await api.post("/auth/register", { email, password: senha });
         setSucesso("Conta criada! Faça login.");
         setMode("login");
         setSenha("");
