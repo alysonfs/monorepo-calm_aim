@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "▶ Rodando testes de integração + cobertura (mínimo 80%)..."
+npx turbo run test:integration --filter=@calm-aim/api
+
+exit $?
