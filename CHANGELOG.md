@@ -5,31 +5,39 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+---
+
+## [0.2.0] - 2026-05-08
+
+> M1 concluído: usuário consegue criar conta, fazer login e ter sessões de
+> treino registradas no MongoDB via frontend. Inclui CORS, roteamento SPA
+> correto no nginx, suite de testes de integração e @calm-aim/core unificado.
+
 ### Added
-- Modelos Mongoose `Usuario` (email, passwordHash, role, refreshToken, preferences) e `Sessao` (userId, modo, status, timestamps).
-- Use cases de autenticação: `registerUsuario`, `loginUsuario`, `refreshToken` — lógica pura sem acoplamento ao framework.
-- Use cases de sessão: `createSessao`, `getSessao` — com erros de domínio tipados.
-- Repositórios Mongoose `UsuarioMongoRepo` e `SessaoMongoRepo` como classes `@injectable()` via tsyringe.
-- Container de injeção de dependência em `apps/api/src/container/` com tokens simbólicos.
-- Endpoints: `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`, `POST /sessions`, `GET /sessions/:id`.
-- Middleware `requireAuth` — extrai e valida Bearer JWT, injeta `req.userId`.
-- Script `seed` — cria usuário root via variáveis de ambiente, idempotente.
-- 31 testes unitários cobrindo use cases, repositórios e middleware (Jest + ts-jest).
-- Frontend: tela de login/cadastro com toggle, dashboard com criação de sessão, canvas Three.js, tela de debug ao vivo.
-- HTTP client Axios com interceptor de refresh automático de token.
-- `AuthContext` React para estado global de autenticação.
-- Rota `/debug` (sem autenticação) para visualizar dados do DualSense em tempo real.
-- Collector: integração real com DualSense via `dualsense-ts` — acelerômetro e giroscópio a ~60fps via WebSocket.
-- Fallback gracioso no collector: emite zeros com `conectado: false` quando controle ausente, retenta a cada 5s.
+- `GET /sessions` — lista sessões do usuário autenticado, ordenadas por data.
+- Use case `listSessoes` e método `findByUserId` no `SessaoMongoRepo`.
+- Suite de testes de integração com `mongodb-memory-server` (19 testes, ≥80% de cobertura).
+- 2 testes unitários para `listSessoes`.
+- `packages/core` — substitui `packages/types`; contém tipos de domínio e contratos HTTP.
+- CORS middleware na API com `ALLOWED_ORIGIN` configurável via variável de ambiente.
+- Dashboard carrega a lista de sessões do usuário via `GET /sessions` ao montar.
+- `apps/web/nginx.conf` com `try_files` para roteamento SPA (corrige 404 em `/login`).
+- Scripts `test:integration` e `test:coverage` no `package.json` da API.
+- `jest.config.integration.ts` com threshold de cobertura de 80%.
+- `tsconfig.build.json` separado para excluir testes do build de produção.
+- Pre-push hook no Husky (lint + test obrigatórios antes do push).
+- Novos documentos em `docs/wiki/`: `banco-de-dados.md`, `como-testar.md`, `docker.md`, `testes.md`, `versoes-e-compatibilidade.md`.
+
+### Fixed
+- Campo `password` no formulário de login/cadastro alinhado com o contrato da API (era `senha`).
+- Dockerfiles da API e web atualizados: caminho `packages/types` corrigido para `packages/core`.
 
 ### Changed
-- `EventoDualSense` em `packages/types` recebe campo `conectado: boolean`.
-- `turbo.json`: chave `pipeline` migrada para `tasks` (Turborepo v2.x).
-- Routes da API refatoradas para thin handlers — toda lógica delegada para use cases.
+- Testes unitários movidos de `src/` para `tests/unit/` seguindo convenção Jest.
+- `turbo.json` recebe task `test:integration`.
 
-### Added (infraestrutura)
-- Husky pre-commit hook: bloqueia commit se `turbo run lint test` falhar.
-- `experimentalDecorators` e `emitDecoratorMetadata` habilitados no tsconfig da API.
+### Removed
+- `packages/types` substituído por `packages/core`.
 
 ---
 
