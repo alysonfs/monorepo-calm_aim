@@ -77,7 +77,47 @@ Adultos que amam jogar FPS perdem performance com o tempo e consideram abandonar
 **Critério de conclusão:** usuário completa uma sessão de treino com alvos em movimento e tem métricas básicas (precisão, reação) salvas no banco.
 **Depende de:** M1 concluído.
 
-> Detalhamento de tarefas a ser feito quando M1 for concluído.
+### Assets 3D
+
+- [ ] Converter `FpsAKM.fbx` para `.glb` no Blender (Decimate Modifier se necessário; bake de iluminação se estática)
+- [ ] Comprimir e gerar componente com `npx gltfjsx FpsAKM.glb -S -T -t`
+- [ ] Publicar em `apps/web/public/models/FpsAKM.glb`
+- [ ] Adicionar crédito CC-BY obrigatório na UI e no `README.md`: *"Fps Rig AKM" by J-Toastie [CC-BY] via Poly Pizza*
+
+> Outros assets disponíveis no FPS Pack (uso futuro): FpsGlock, RiggedFpsArms, AKM estático, Grenade, CombatKnife, Mossberg590A1, GunCase, cartuchos 7.62×39mm e 9×19mm — todos em `/Users/alysonfs/Downloads/FPS Pack J-Toastie/`.
+
+### Frontend (`apps/web`) — Cena FPS
+
+- [ ] Criar componente `FpsRig` que carrega `FpsAKM.glb`, inicializa `AnimationMixer` e expõe `play(clipName)` — nomes esperados: `Armature|Idle`, `Armature|Shoot`, `Armature|Reload`
+- [ ] Montar `gunHolder` como `Object3D` filho da câmera (`position.set(0, -0.2, -0.5)`)
+- [ ] Configurar câmera FPS: `PerspectiveCamera(70)`, `rotation.order = "YXZ"`, Pointer Lock API para mouse look
+- [ ] Movimentação WASD + jump (baseado em `ThreeJS_FPS_2.0` como referência)
+- [ ] Criar sistema de alvos esféricos em movimento na cena (spawn, trajetória e despawn ao ser acertado)
+- [ ] Raycast / "throw sphere" para detecção de hit
+- [ ] Animação de disparo ao clicar (`Armature|Shoot` → volta para `Armature|Idle`)
+- [ ] Animação de reload automático após N disparos
+- [ ] Otimizações de cena (ver `docs/wiki/threejs-performance.md`):
+  - DPR limitado a `Math.min(1, window.devicePixelRatio)`
+  - `frameloop="demand"` ou pausar quando aba oculta
+  - `gl={{ powerPreference: "high-performance", antialias: false }}`
+
+### Backend (`apps/api`)
+
+- [ ] Campo `metricas` no modelo `Sessao`: `{ precisao: number, tempoMedioReacao: number, totalTiros: number, acertos: number }`
+- [ ] `PATCH /sessions/:id` — atualiza status e métricas ao encerrar sessão
+- [ ] Use case `encerrarSessao(id, metricas)`
+- [ ] Testes unitários para `encerrarSessao`
+- [ ] Testes de integração para `PATCH /sessions/:id`
+
+### Collector (`apps/collector`)
+
+- [ ] Detectar DualSense via `hidapi` / `dualsense-ts` e emitir `EventoDualSense` via WebSocket
+- [ ] Frontend conecta ao WebSocket e exibe leituras de acelerômetro/giroscópio na tela de debug
+
+### Persistência de métricas
+
+- [ ] Frontend envia `PATCH /sessions/:id` com métricas ao fim da sessão
+- [ ] Dashboard exibe precisão e tempo de reação por sessão na lista
 
 ---
 
