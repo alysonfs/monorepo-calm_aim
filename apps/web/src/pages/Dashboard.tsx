@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import api from "../http/client";
@@ -8,7 +8,8 @@ const ACCESS_TOKEN_KEY = "calm_aim:access_token";
 type Sessao = {
   _id: string;
   modo: string;
-  criadoEm: string;
+  status: string;
+  createdAt: string;
 };
 
 const styles: Record<string, React.CSSProperties> = {
@@ -45,8 +46,26 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: "0.9rem",
     cursor: "pointer",
   },
-  empty: { color: "#666", marginTop: "2rem" },
-  error: { color: "#f87171", fontSize: "0.85rem", marginTop: "0.5rem" },
+  sessaoList: {
+    listStyle: "none",
+    padding: 0,
+    margin: "1.5rem 0 0",
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: "0.75rem",
+  },
+  sessaoCard: {
+    background: "#1a1a1a",
+    border: "1px solid #2a2a2a",
+    borderRadius: "6px",
+    padding: "0.75rem 1rem",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  sessaoModo: { fontSize: "0.9rem", textTransform: "capitalize" as const },
+  sessaoStatus: { fontSize: "0.8rem", color: "#aaa" },
+  sessaoData: { fontSize: "0.8rem", color: "#666" },
 };
 
 function decodeEmail(token: string): string {
@@ -61,8 +80,7 @@ function decodeEmail(token: string): string {
 }
 
 export default function Dashboard() {
-  // TODO: GET /sessions quando endpoint existir
-  const [sessoes] = useState<Sessao[]>([]);
+  const [sessoes, setSessoes] = useState<Sessao[]>([]);
   const [erro, setErro] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -72,11 +90,20 @@ export default function Dashboard() {
   const token = localStorage.getItem(ACCESS_TOKEN_KEY) ?? "";
   const emailUsuario = decodeEmail(token);
 
+  useEffect(() => {
+    api
+      .get<Sessao[]>("/sessions")
+      .then((res) => setSessoes(res.data))
+      .catch(() => setErro("Erro ao carregar sessões."));
+  }, []);
+
   const handleNovaSessao = async () => {
     setErro("");
     setLoading(true);
     try {
       await api.post("/sessions", { modo: "livre" });
+      const res = await api.get<Sessao[]>("/sessions");
+      setSessoes(res.data);
       navigate("/treino");
     } catch (err: unknown) {
       const message = (err as { response?: { data?: { message?: string } } })
@@ -113,9 +140,15 @@ export default function Dashboard() {
       {sessoes.length === 0 ? (
         <p style={styles.empty}>Nenhuma sessão encontrada.</p>
       ) : (
-        <ul>
+        <ul style={styles.sessaoList}>
           {sessoes.map((s) => (
-            <li key={s._id}>{s.modo}</li>
+            <li key={s._id} style={styles.sessaoCard}>
+              <span style={styles.sessaoModo}>{s.modo}</span>
+              <span style={styles.sessaoStatus}>{s.status}</span>
+              <span style={styles.sessaoData}>
+                {new Date(s.createdAt).toLocaleDateString("pt-BR")}
+              </span>
+            </li>
           ))}
         </ul>
       )}
