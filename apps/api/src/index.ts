@@ -1,4 +1,5 @@
 import "reflect-metadata";
+import cors from "cors";
 import express from "express";
 import { connectMongo } from "./db/mongo.js";
 import authRouter from "./routes/auth.js";
@@ -6,7 +7,9 @@ import sessionsRouter from "./routes/sessions.js";
 
 const app = express();
 const PORT = process.env["PORT"] ?? 3001;
+const ALLOWED_ORIGIN = process.env["ALLOWED_ORIGIN"] ?? "http://localhost:5174";
 
+app.use(cors({ origin: ALLOWED_ORIGIN, credentials: true }));
 app.use(express.json());
 
 app.get("/health", (_req, res) => {

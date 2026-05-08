@@ -8,7 +8,7 @@ COPY package*.json ./
 COPY apps/web/package*.json ./apps/web/
 COPY packages/typescript-config/package*.json ./packages/typescript-config/
 COPY packages/eslint-config/package*.json ./packages/eslint-config/
-COPY packages/types/package*.json ./packages/types/
+COPY packages/core/package*.json ./packages/core/
 
 RUN npm ci --workspace=apps/web --include-workspace-root
 
@@ -22,6 +22,7 @@ RUN npm run build
 FROM nginx:1.27-alpine AS runner
 
 COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
+COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
 
 RUN addgroup --system --gid 1001 appgroup && \
     adduser --system --uid 1001 --ingroup appgroup appuser && \
