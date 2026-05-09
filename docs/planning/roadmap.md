@@ -66,8 +66,7 @@ Adultos que amam jogar FPS perdem performance com o tempo e consideram abandonar
 
 ### Collector (`apps/collector`)
 
-- [ ] Detectar DualSense via HID e emitir eventos brutos via WebSocket
-- [ ] Frontend exibe leituras de acelerômetro/giroscópio em tempo real (tela de debug)
+> Tarefas do Collector foram diferidas para o M2 — o critério de conclusão do M1 não as exigia.
 
 ---
 
