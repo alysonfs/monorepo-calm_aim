@@ -1,4 +1,7 @@
 import "reflect-metadata";
+import { config as loadEnv } from "dotenv";
+loadEnv({ path: ".env.local" });
+loadEnv({ path: ".env" });
 import cors from "cors";
 import express from "express";
 import { connectMongo } from "./db/mongo.js";

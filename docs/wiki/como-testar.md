@@ -24,6 +24,8 @@ npm install
 
 ## 2. Subir a infraestrutura
 
+### Opção A — Tudo via Docker (produção local)
+
 ```bash
 # macOS com Colima — iniciar o daemon Docker primeiro:
 colima start
@@ -31,6 +33,19 @@ colima start
 # Subir MongoDB, Redis, Cassandra, API e Web em background:
 docker compose up -d
 ```
+
+### Opção B — Infra via Docker, apps localmente (desenvolvimento)
+
+Mais rápido para iterar: os apps rodam com hot-reload sem precisar rebuildar imagens.
+
+```bash
+# 1. Subir apenas a infra (mongo + redis):
+npm run dev:local
+```
+
+> `dev:local` = `docker compose up -d mongo redis && turbo run dev`
+
+O `.env.local` em `apps/api/` já aponta para `localhost` e sobrescreve o `.env` que usa hostnames do Docker. O arquivo é criado uma vez e nunca commitado (já está no `.gitignore`).
 
 Aguardar todos os serviços ficarem healthy (pode levar ~30s na primeira vez):
 
@@ -149,6 +164,18 @@ npx turbo run test:integration --filter=@calm-aim/api
 ---
 
 ## Problemas comuns
+
+### `Error: MONGO_URI não definida` ao rodar `npm run dev`
+
+A API carrega `.env.local` antes de `.env`. Certifique-se de que o arquivo existe:
+
+```bash
+# apps/api/.env.local  (gitignored — criar manualmente após clonar)
+MONGO_URI=mongodb://localhost:27017/calm_aim
+REDIS_URL=redis://localhost:6379
+```
+
+Use `npm run dev:local` em vez de `npm run dev` para garantir que mongo e redis estejam rodando antes.
 
 ### `docker compose up` falha — daemon não está rodando
 
