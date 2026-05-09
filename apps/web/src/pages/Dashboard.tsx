@@ -5,11 +5,19 @@ import api from "../http/client";
 
 const ACCESS_TOKEN_KEY = "calm_aim:access_token";
 
+type Metricas = {
+  totalTiros: number;
+  acertos: number;
+  precisao: number;
+  tempoMedioReacaoMs: number;
+};
+
 type Sessao = {
   _id: string;
   modo: string;
   status: string;
   createdAt: string;
+  metricas?: Metricas;
 };
 
 const styles: Record<string, React.CSSProperties> = {
@@ -101,10 +109,10 @@ export default function Dashboard() {
     setErro("");
     setLoading(true);
     try {
-      await api.post("/sessions", { modo: "livre" });
+      const nova = await api.post<Sessao>("/sessions", { modo: "livre" });
       const res = await api.get<Sessao[]>("/sessions");
       setSessoes(res.data);
-      navigate("/treino");
+      navigate(`/treino?sessaoId=${nova.data._id}`);
     } catch (err: unknown) {
       const message = (err as { response?: { data?: { message?: string } } })
         ?.response?.data?.message;
@@ -145,6 +153,12 @@ export default function Dashboard() {
             <li key={s._id} style={styles.sessaoCard}>
               <span style={styles.sessaoModo}>{s.modo}</span>
               <span style={styles.sessaoStatus}>{s.status}</span>
+              {s.metricas && (
+                <span style={{ fontSize: "0.8rem", color: "#7c7" }}>
+                  {s.metricas.precisao.toFixed(1)}% · {s.metricas.acertos}/
+                  {s.metricas.totalTiros} hits
+                </span>
+              )}
               <span style={styles.sessaoData}>
                 {new Date(s.createdAt).toLocaleDateString("pt-BR")}
               </span>
