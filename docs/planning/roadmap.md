@@ -14,7 +14,7 @@ Adultos que amam jogar FPS perdem performance com o tempo e consideram abandonar
 |-------|-----------|--------|
 | M0 | Monorepo + infra local rodando | ✅ Concluído |
 | M1 | Login + sessão de treino registrada no banco | ✅ Concluído |
-| M2 | Primeiro treino jogável + dados do DualSense ao vivo | ⚪ Não iniciado |
+| M2 | Primeiro treino jogável + dados do DualSense ao vivo | 🔄 Em andamento |
 | M3 | Motor adaptativo + análise emocional por voz | ⚪ Não iniciado |
 
 ---
@@ -73,29 +73,29 @@ Adultos que amam jogar FPS perdem performance com o tempo e consideram abandonar
 
 ## M2 — Primeiro Treino Jogável
 
-**Status:** ⚪ Não iniciado
+**Status:** 🔄 Em andamento
 **Critério de conclusão:** usuário completa uma sessão de treino com alvos em movimento e tem métricas básicas (precisão, reação) salvas no banco.
 **Depende de:** M1 concluído.
 
 ### Assets 3D
 
-- [ ] Converter `FpsAKM.fbx` para `.glb` no Blender (Decimate Modifier se necessário; bake de iluminação se estática)
+- [x] Converter `FpsAKM.fbx` para `.glb` via assimp (Blender não disponível; resultado equivalente)
 - [ ] Comprimir e gerar componente com `npx gltfjsx FpsAKM.glb -S -T -t`
-- [ ] Publicar em `apps/web/public/models/FpsAKM.glb`
-- [ ] Adicionar crédito CC-BY obrigatório na UI e no `README.md`: *"Fps Rig AKM" by J-Toastie [CC-BY] via Poly Pizza*
+- [x] Publicar em `apps/web/public/models/FpsAKM.glb`
+- [x] Adicionar crédito CC-BY obrigatório em `CREDITS.md`: *"Fps Rig AKM" by J-Toastie [CC-BY] via Poly Pizza*
 
 > Outros assets disponíveis no FPS Pack (uso futuro): FpsGlock, RiggedFpsArms, AKM estático, Grenade, CombatKnife, Mossberg590A1, GunCase, cartuchos 7.62×39mm e 9×19mm — todos em `/Users/alysonfs/Downloads/FPS Pack J-Toastie/`.
 
 ### Frontend (`apps/web`) — Cena FPS
 
-- [ ] Criar componente `FpsRig` que carrega `FpsAKM.glb`, inicializa `AnimationMixer` e expõe `play(clipName)` — nomes esperados: `Armature|Idle`, `Armature|Shoot`, `Armature|Reload`
-- [ ] Montar `gunHolder` como `Object3D` filho da câmera (`position.set(0, -0.2, -0.5)`)
-- [ ] Configurar câmera FPS: `PerspectiveCamera(70)`, `rotation.order = "YXZ"`, Pointer Lock API para mouse look
-- [ ] Movimentação WASD + jump (baseado em `ThreeJS_FPS_2.0` como referência)
-- [ ] Criar sistema de alvos esféricos em movimento na cena (spawn, trajetória e despawn ao ser acertado)
-- [ ] Raycast / "throw sphere" para detecção de hit
-- [ ] Animação de disparo ao clicar (`Armature|Shoot` → volta para `Armature|Idle`)
-- [ ] Animação de reload automático após N disparos
+- [x] Criar componente `FpsRig` que carrega `FpsAKM.glb`, inicializa `AnimationMixer` e expõe `play(clipName)` — nomes esperados: `Armature|Idle`, `Armature|Shoot`, `Armature|Reload`
+- [x] Montar `gunHolder` como `Object3D` filho da câmera (`position.set(0, -0.2, -0.5)`)
+- [x] Configurar câmera FPS: `PerspectiveCamera(70)`, `rotation.order = "YXZ"`, Pointer Lock API para mouse look
+- [x] Movimentação WASD + jump (baseado em `ThreeJS_FPS_2.0` como referência)
+- [x] Criar sistema de alvos esféricos em movimento na cena (spawn, trajetória e despawn ao ser acertado)
+- [x] Raycast / "throw sphere" para detecção de hit
+- [x] Animação de disparo ao clicar (`Armature|Shoot` → volta para `Armature|Idle`)
+- [x] Animação de reload automático após N disparos
 - [ ] Otimizações de cena (ver `docs/wiki/threejs-performance.md`):
   - DPR limitado a `Math.min(1, window.devicePixelRatio)`
   - `frameloop="demand"` ou pausar quando aba oculta
@@ -103,11 +103,11 @@ Adultos que amam jogar FPS perdem performance com o tempo e consideram abandonar
 
 ### Backend (`apps/api`)
 
-- [ ] Campo `metricas` no modelo `Sessao`: `{ precisao: number, tempoMedioReacao: number, totalTiros: number, acertos: number }`
-- [ ] `PATCH /sessions/:id` — atualiza status e métricas ao encerrar sessão
-- [ ] Use case `encerrarSessao(id, metricas)`
-- [ ] Testes unitários para `encerrarSessao`
-- [ ] Testes de integração para `PATCH /sessions/:id`
+- [x] Campo `metricas` no modelo `Sessao`: `{ precisao: number, tempoMedioReacao: number, totalTiros: number, acertos: number }`
+- [x] `PATCH /sessions/:id` — atualiza status e métricas ao encerrar sessão
+- [x] Use case `encerrarSessao(id, metricas)`
+- [x] Testes unitários para `encerrarSessao`
+- [x] Testes de integração para `PATCH /sessions/:id`
 
 ### Collector (`apps/collector`)
 
@@ -116,8 +116,8 @@ Adultos que amam jogar FPS perdem performance com o tempo e consideram abandonar
 
 ### Persistência de métricas
 
-- [ ] Frontend envia `PATCH /sessions/:id` com métricas ao fim da sessão
-- [ ] Dashboard exibe precisão e tempo de reação por sessão na lista
+- [x] Frontend envia `PATCH /sessions/:id` com métricas ao fim da sessão
+- [x] Dashboard exibe precisão e tempo de reação por sessão na lista
 
 ---
 

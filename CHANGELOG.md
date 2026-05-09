@@ -5,6 +5,22 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- Cena FPS jogável em `apps/web`: câmera com Pointer Lock, movimentação WASD + salto e gravidade.
+- Sistema de alvos esféricos com spawn, trajetória e detecção de hit via raycaster.
+- `FpsRig`: carrega `FpsAKM.glb` via GLTFLoader com animações `Idle`, `Shoot` e `Reload`.
+- `MetricasTracker`: rastreia tiros, acertos e tempo médio de reação por sessão.
+- `PATCH /sessions/:id` — encerra sessão e persiste métricas no MongoDB.
+- Use case `encerrarSessao` com validação de ownership e status.
+- Campo `metricas` no modelo `Sessao` (`totalTiros`, `acertos`, `precisao`, `tempoMedioReacaoMs`).
+- 4 testes unitários para `encerrarSessao`; 4 novos testes de integração para `PATCH /sessions/:id`.
+- `apps/web/public/models/FpsAKM.glb` — modelo convertido de FBX via assimp.
+- `CREDITS.md` com crédito CC-BY 3.0: "Fps Rig AKM" por J-Toastie via Poly Pizza.
+
+### Changed
+- `Dashboard.tsx`: `handleNovaSessao` navega para `/treino?sessaoId=:id`; cards de sessão exibem métricas quando disponíveis.
+- `Treino.tsx` reescrito como orquestrador da cena FPS (substituiu placeholder de cubo girando).
+
 ---
 
 ## [0.2.0] - 2026-05-08
