@@ -13,7 +13,7 @@ export function createFpsCamera(canvas: HTMLElement): FpsCameraResult {
   const camera = new THREE.PerspectiveCamera(
     70,
     canvas.clientWidth / canvas.clientHeight,
-    0.1,
+    0.02,
     1000,
   );
   camera.rotation.order = "YXZ";

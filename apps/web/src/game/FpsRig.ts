@@ -28,7 +28,8 @@ export function loadFpsRig(
         gun.rotation.set(0, Math.PI / 2, 0);
 
         const gunHolder = new THREE.Object3D();
-        gunHolder.position.set(0.15, -0.2, -0.45);
+        // O posicionamento do gunHolder é ajustado para alinhar a arma corretamente na câmera, considerando a posição do modelo 3D e o ponto de mira desejado.
+        gunHolder.position.set(0.15, -0.25, -0.35);
         camera.add(gunHolder);
         gunHolder.add(gun);
 
