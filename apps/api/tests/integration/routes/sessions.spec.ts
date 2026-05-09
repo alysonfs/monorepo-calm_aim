@@ -144,3 +144,59 @@ describe("GET /sessions", () => {
     expect(res.status).toBe(401);
   });
 });
+
+describe("PATCH /sessions/:id", () => {
+  let sessaoId: string;
+  const metricas = {
+    totalTiros: 20,
+    acertos: 15,
+    precisao: 75,
+    tempoMedioReacaoMs: 320,
+  };
+
+  beforeAll(async () => {
+    const res = await request(app)
+      .post("/sessions")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ modo: "livre" });
+    sessaoId = res.body._id;
+  });
+
+  it("deve encerrar a sessão e retornar métricas", async () => {
+    const res = await request(app)
+      .patch(`/sessions/${sessaoId}`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send(metricas);
+
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe("concluida");
+    expect(res.body.metricas).toMatchObject(metricas);
+    expect(res.body.endedAt).toBeDefined();
+  });
+
+  it("deve retornar 409 ao tentar encerrar sessão já concluída", async () => {
+    const res = await request(app)
+      .patch(`/sessions/${sessaoId}`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send(metricas);
+
+    expect(res.status).toBe(409);
+    expect(res.body.message).toBe("Sessão já encerrada");
+  });
+
+  it("deve retornar 400 para métricas inválidas", async () => {
+    const res = await request(app)
+      .patch(`/sessions/${sessaoId}`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ totalTiros: "nao-e-numero" });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("deve retornar 401 sem token", async () => {
+    const res = await request(app)
+      .patch(`/sessions/${sessaoId}`)
+      .send(metricas);
+    expect(res.status).toBe(401);
+  });
+});

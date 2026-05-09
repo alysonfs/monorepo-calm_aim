@@ -52,18 +52,18 @@ describe("SessaoMongoRepo", () => {
 
     it("deve chamar findById para id válido", async () => {
       mockIsValid.mockReturnValue(true);
-      const fakeSessao = { id: "s1", userId: "u1" };
-      (mockSessao.findById as jest.Mock).mockResolvedValue(fakeSessao);
+      const fakeSessao = { id: "s1", userId: "u1", status: "ativa" };
+      (mockSessao.findById as jest.Mock).mockReturnValue({ lean: jest.fn().mockResolvedValue(fakeSessao) });
       const result = await repo.findById("507f1f77bcf86cd799439011");
       expect(mockSessao.findById).toHaveBeenCalledWith(
         "507f1f77bcf86cd799439011",
       );
-      expect(result).toEqual(fakeSessao);
+      expect(result).toEqual({ ...fakeSessao, userId: "u1" });
     });
 
     it("deve retornar null se sessão não existe", async () => {
       mockIsValid.mockReturnValue(true);
-      (mockSessao.findById as jest.Mock).mockResolvedValue(null);
+      (mockSessao.findById as jest.Mock).mockReturnValue({ lean: jest.fn().mockResolvedValue(null) });
       expect(await repo.findById("507f1f77bcf86cd799439011")).toBeNull();
     });
   });
