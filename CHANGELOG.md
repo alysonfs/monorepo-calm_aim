@@ -5,6 +5,14 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+---
+
+## [0.3.0] - 2026-05-11
+
+> M2 concluído: primeiro treino FPS jogável no browser. Jogador controla
+> personagem com câmera Pointer Lock, acerta alvos em movimento e tem
+> métricas de precisão e tempo de reação salvas no MongoDB ao fim da sessão.
+
 ### Added
 - Cena FPS jogável em `apps/web`: câmera com Pointer Lock, movimentação WASD + salto e gravidade.
 - Sistema de alvos esféricos com spawn, trajetória e detecção de hit via raycaster.
@@ -14,12 +22,15 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 - Use case `encerrarSessao` com validação de ownership e status.
 - Campo `metricas` no modelo `Sessao` (`totalTiros`, `acertos`, `precisao`, `tempoMedioReacaoMs`).
 - 4 testes unitários para `encerrarSessao`; 4 novos testes de integração para `PATCH /sessions/:id`.
-- `apps/web/public/models/FpsAKM.glb` — modelo convertido de FBX via assimp.
+- `apps/web/public/models/FpsAKM.glb` — modelo reexportado do Blender com orientação correta.
 - `CREDITS.md` com crédito CC-BY 3.0: "Fps Rig AKM" por J-Toastie via Poly Pizza.
+- Script `dev:local` na raiz: sobe mongo+redis via Docker e roda `turbo run dev` com hot-reload.
+- `apps/api/.env.local` (gitignored) com URLs `localhost` para dev sem Docker build.
 
 ### Changed
 - `Dashboard.tsx`: `handleNovaSessao` navega para `/treino?sessaoId=:id`; cards de sessão exibem métricas quando disponíveis.
 - `Treino.tsx` reescrito como orquestrador da cena FPS (substituiu placeholder de cubo girando).
+- `apps/api/src/index.ts`: carrega `.env.local` antes de `.env` para sobrescrever hostnames Docker localmente.
 
 ### Fixed
 - Orientação da arma FPS: modelo GLB reexportado do Blender com cano apontando para -Z; `FpsRig.ts` usa `rotation.y = Math.PI` para alinhar com a câmera.

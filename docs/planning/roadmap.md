@@ -14,7 +14,7 @@ Adultos que amam jogar FPS perdem performance com o tempo e consideram abandonar
 |-------|-----------|--------|
 | M0 | Monorepo + infra local rodando | ✅ Concluído |
 | M1 | Login + sessão de treino registrada no banco | ✅ Concluído |
-| M2 | Primeiro treino jogável + dados do DualSense ao vivo | 🔄 Em andamento |
+| M2 | Primeiro treino jogável + dados do DualSense ao vivo | ✅ Concluído |
 | M3 | Motor adaptativo + análise emocional por voz | ⚪ Não iniciado |
 
 ---
@@ -72,7 +72,7 @@ Adultos que amam jogar FPS perdem performance com o tempo e consideram abandonar
 
 ## M2 — Primeiro Treino Jogável
 
-**Status:** 🔄 Em andamento
+**Status:** ✅ Concluído
 **Critério de conclusão:** usuário completa uma sessão de treino com alvos em movimento e tem métricas básicas (precisão, reação) salvas no banco.
 **Depende de:** M1 concluído.
 
