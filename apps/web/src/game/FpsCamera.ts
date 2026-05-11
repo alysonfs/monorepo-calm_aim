@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import type { EventoDualSense } from "@calm-aim/core";
 
 export interface FpsCameraResult {
   camera: THREE.PerspectiveCamera;
@@ -7,7 +8,11 @@ export interface FpsCameraResult {
   lock(): void;
   /** Remove listeners e libera recursos */
   dispose(): void;
+  /** Aplica entrada do stick direito do DualSense */
+  applyControllerLook(dx: number, dy: number): void;
 }
+
+const STICK_SENSITIVITY = 0.04;
 
 export function createFpsCamera(canvas: HTMLElement): FpsCameraResult {
   const camera = new THREE.PerspectiveCamera(
@@ -39,8 +44,26 @@ export function createFpsCamera(canvas: HTMLElement): FpsCameraResult {
     lock() {
       canvas.requestPointerLock();
     },
+    applyControllerLook(dx: number, dy: number) {
+      camera.rotation.y -= dx * STICK_SENSITIVITY;
+      camera.rotation.x = Math.max(
+        -Math.PI / 2 + 0.05,
+        Math.min(
+          Math.PI / 2 - 0.05,
+          camera.rotation.x + dy * STICK_SENSITIVITY,
+        ),
+      );
+    },
     dispose() {
       document.removeEventListener("mousemove", onMouseMove);
     },
   };
+}
+
+/** Extrai look do stick direito; retorna [0,0] se evento nulo ou desconectado */
+export function getLookFromEvent(
+  evento: EventoDualSense | null,
+): [number, number] {
+  if (!evento?.conectado) return [0, 0];
+  return [evento.sticks.direito.x, evento.sticks.direito.y];
 }

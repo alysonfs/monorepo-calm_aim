@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import * as THREE from "three";
-import { createFpsCamera } from "../game/FpsCamera";
+import { createFpsCamera, getLookFromEvent } from "../game/FpsCamera";
 import { createFpsControls } from "../game/FpsControls";
 import { createTargetSystem } from "../game/TargetSystem";
 import { loadFpsRig, createPlaceholderRig } from "../game/FpsRig";
@@ -9,6 +9,7 @@ import {
   createMetricasTracker,
   type MetricasTrackerResult,
 } from "../game/MetricasTracker";
+import { useDualSense } from "../hooks/useDualSense";
 import api from "../http/client";
 
 const MAX_DPR = 1;
@@ -79,6 +80,7 @@ export default function Treino() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const sessaoId = searchParams.get("sessaoId");
+  const dualSenseRef = useDualSense();
 
   const [locked, setLocked] = useState(false);
   const [ended, setEnded] = useState(false);
@@ -182,10 +184,34 @@ export default function Treino() {
 
     // --- loop ---
     const clock = new THREE.Clock();
+    let r2WasPressed = false;
     const loop = () => {
       const delta = Math.min(clock.getDelta(), 0.05);
       shotCooldown = Math.max(0, shotCooldown - delta * 1000);
-      controls.update(delta);
+      controls.update(delta, dualSenseRef.current);
+
+      // Look do stick direito
+      const [lx, ly] = getLookFromEvent(dualSenseRef.current);
+      if (lx !== 0 || ly !== 0) fps.applyControllerLook(lx, ly);
+
+      // Disparo por R2 (gatilho analógico > 0.5 = pressão suficiente)
+      const r2 = dualSenseRef.current?.triggers.r2 ?? 0;
+      const r2Pressed = r2 > 0.5;
+      if (r2Pressed && !r2WasPressed && shotCooldown <= 0) {
+        shotCooldown = 200;
+        tracker.registrarTiro();
+        rig.play("Armature|Shoot");
+        const spawnedAt = targetSystem.checkHit(fps.camera, scene);
+        if (spawnedAt !== null) tracker.registrarAcerto(spawnedAt);
+        const m = tracker.calcular();
+        setHud({
+          tiros: m.totalTiros,
+          acertos: m.acertos,
+          precisao: m.precisao,
+        });
+      }
+      r2WasPressed = r2Pressed;
+
       targetSystem.update(delta);
       rig.update(delta);
       renderer.render(scene, fps.camera);
