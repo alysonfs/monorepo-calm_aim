@@ -26,7 +26,7 @@ export function loadFpsRig(
         const gun = gltf.scene;
         const gunScale = 0.08;
         gun.scale.set(gunScale, gunScale, gunScale);
-        gun.rotation.set(0, Math.PI, 0);
+        gun.rotation.set(0, Math.PI / 2, 0);
 
         const gunHolder = new THREE.Object3D();
         gunHolder.position.set(0.15, -0.25, -0.45);
