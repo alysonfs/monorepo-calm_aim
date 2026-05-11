@@ -21,15 +21,15 @@ export function loadFpsRig(
     const loader = new GLTFLoader();
 
     loader.load(
-      "/models/FpsAKM.glb",
+      "/models/Fps Rig AKM 3D Model.glb",
       (gltf) => {
         const gun = gltf.scene;
-        gun.scale.set(0.08, 0.08, 0.08);
+        const gunScale = 0.0003;
+        gun.scale.set(gunScale, gunScale, gunScale);
         gun.rotation.set(0, Math.PI / 2, 0);
 
         const gunHolder = new THREE.Object3D();
-        // O posicionamento do gunHolder é ajustado para alinhar a arma corretamente na câmera, considerando a posição do modelo 3D e o ponto de mira desejado.
-        gunHolder.position.set(0.15, -0.25, -0.35);
+        gunHolder.position.set(0.15, -0.25, -0.45);
         camera.add(gunHolder);
         gunHolder.add(gun);
 
