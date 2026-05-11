@@ -95,7 +95,7 @@ Adultos que amam jogar FPS perdem performance com o tempo e consideram abandonar
 - [x] Raycast / "throw sphere" para detecção de hit
 - [x] Animação de disparo ao clicar (`Armature|Shoot` → volta para `Armature|Idle`)
 - [x] Animação de reload automático após N disparos
-- [ ] Otimizações de cena (ver `docs/wiki/threejs-performance.md`):
+- [x] Otimizações de cena:
   - DPR limitado a `Math.min(1, window.devicePixelRatio)`
   - `frameloop="demand"` ou pausar quando aba oculta
   - `gl={{ powerPreference: "high-performance", antialias: false }}`
@@ -110,8 +110,8 @@ Adultos que amam jogar FPS perdem performance com o tempo e consideram abandonar
 
 ### Collector (`apps/collector`)
 
-- [ ] Detectar DualSense via `hidapi` / `dualsense-ts` e emitir `EventoDualSense` via WebSocket
-- [ ] Frontend conecta ao WebSocket e exibe leituras de acelerômetro/giroscópio na tela de debug
+- [x] Detectar DualSense via `dualsense-ts` e emitir `EventoDualSense` via WebSocket
+- [x] Frontend conecta ao WebSocket e consome dados ao vivo no loop FPS (sticks, triggers, giroscópio)
 
 ### Persistência de métricas
 

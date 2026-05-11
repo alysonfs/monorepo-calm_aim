@@ -7,6 +7,27 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## [0.4.0] - 2026-05-11
+
+> Suporte completo ao DualSense no treino FPS. Sticks analógicos controlam
+> movimento e câmera; R2 dispara; X pula. Collector conecta ao controle via
+> dualsense-ts e transmite eventos ao vivo via WebSocket.
+
+### Added
+- `EventoDualSense` expandido com sticks analógicos (esquerdo/direito, x/y) e triggers analógicos (l2/r2).
+- `apps/collector`: detecta DualSense via `dualsense-ts` e faz broadcast de sticks, triggers e botões via WebSocket.
+- Hook `useDualSense` no frontend — consome collector via WebSocket sem causar re-renders (useRef).
+- `FpsCamera.applyControllerLook` — stick direito controla câmera com sensibilidade configurável.
+- `FpsControls.update` aceita evento do DualSense — stick esquerdo move personagem, X pula.
+- Disparo por R2 no loop de jogo (gatilho analógico > 0.5 com cooldown e estado de borda).
+- Vitest como test runner no `apps/web`; 12 novos testes unitários (`MetricasTracker`, `getLookFromEvent`).
+
+### Fixed
+- Eixo Y dos sticks invertido: corrigido para convenção matemática da `dualsense-ts` (cima = +1).
+- Collector usava `on("input")` que não borbulha até o pai — corrigido para `on("change")`.
+
+---
+
 ## [0.3.0] - 2026-05-11
 
 > M2 concluído: primeiro treino FPS jogável no browser. Jogador controla
