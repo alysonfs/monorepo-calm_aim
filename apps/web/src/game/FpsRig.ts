@@ -21,12 +21,12 @@ export function loadFpsRig(
     const loader = new GLTFLoader();
 
     loader.load(
-      "/models/Fps Rig AKM 3D Model.glb",
+      "/models/FpsAKM.glb",
       (gltf) => {
         const gun = gltf.scene;
-        const gunScale = 0.0003;
+        const gunScale = 0.08;
         gun.scale.set(gunScale, gunScale, gunScale);
-        gun.rotation.set(0, Math.PI / 2, 0);
+        gun.rotation.set(0, Math.PI, 0);
 
         const gunHolder = new THREE.Object3D();
         gunHolder.position.set(0.15, -0.25, -0.45);
