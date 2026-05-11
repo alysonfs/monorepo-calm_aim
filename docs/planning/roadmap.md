@@ -126,7 +126,43 @@ Adultos que amam jogar FPS perdem performance com o tempo e consideram abandonar
 **Critério de conclusão:** dificuldade ajusta automaticamente com base em performance e estado emocional detectado por voz.
 **Depende de:** M2 concluído.
 
-> Detalhamento de tarefas a ser feito quando M2 for concluído.
+### Infraestrutura Cassandra
+
+- [ ] Criar script de inicialização do keyspace `calm_aim` e tabelas (`eventos_sessao`, `estado_emocional`, `metricas_dificuldade`)
+- [ ] Adicionar inicialização automática do schema ao subir o container (volume bind ou init script)
+- [ ] Conectar `apps/api` ao Cassandra via `cassandra-driver` (DataStax)
+- [ ] Variáveis de ambiente: `CASSANDRA_HOST`, `CASSANDRA_DATACENTER`, `CASSANDRA_KEYSPACE`
+
+### Motor Adaptativo (`apps/api`)
+
+- [ ] Definir escala de dificuldade: `float` 0.0–1.0 mapeado para velocidade, tamanho e frequência dos alvos
+- [ ] Use case `calcularDificuldade(historico)` — regras baseadas em precisão e tempo de reação dos últimos N eventos
+- [ ] Use case `registrarEventoSessao(sessaoId, tipo, reacaoMs, dificuldade)` — grava em `eventos_sessao` no Cassandra
+- [ ] `GET /sessions/:id/dificuldade` — retorna dificuldade atual da sessão
+- [ ] `POST /sessions/:id/eventos` — recebe lote de eventos do frontend e persiste no Cassandra
+- [ ] Testes unitários para `calcularDificuldade`
+
+### Análise Emocional por Voz (`apps/web`)
+
+- [ ] Hook `useMicrofone` — solicita permissão, instancia `AudioContext` e `AnalyserNode`
+- [ ] Módulo `VozAnalyzer` — analisa volume RMS e frequência dominante a cada 500ms
+- [ ] Heurística local de estresse: volume alto + frequência >300Hz sustentada = sinal de estresse
+- [ ] Hook `useEstadoEmocional(analyzer)` — publica nível emocional (0–1) via callback sem re-renders
+- [ ] Integração no loop de Treino: envia leitura emocional ao backend a cada 5s
+- [ ] `POST /sessions/:id/emocao` — recebe leitura e persiste em `estado_emocional` no Cassandra
+
+### Integração Frontend ↔ Motor Adaptativo
+
+- [ ] Frontend consulta `GET /sessions/:id/dificuldade` ao iniciar sessão
+- [ ] Motor envia nova dificuldade como resposta ao `POST /sessions/:id/eventos` quando há ajuste
+- [ ] `FpsControls` e sistema de alvos consomem nível de dificuldade: velocidade dos alvos, tamanho, frequência de spawn
+- [ ] HUD exibe indicador de estado emocional (ícone calmo/alerta) e nível de dificuldade atual
+
+### Testes
+
+- [ ] Testes unitários para `calcularDificuldade` (cenários: melhora contínua, queda brusca, estável)
+- [ ] Testes unitários para `VozAnalyzer` (mocks de AnalyserNode)
+- [ ] Testes de integração para `POST /sessions/:id/eventos` e `POST /sessions/:id/emocao`
 
 ---
 

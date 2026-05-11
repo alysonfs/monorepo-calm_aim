@@ -51,6 +51,19 @@ services:
       timeout: 30s
       retries: 10
 
+  cassandra-web:
+    image: nicholasmoen/cassandra-web
+    ports:
+      - "3200:3000"
+    environment:
+      CASSANDRA_HOST: cassandra
+      CASSANDRA_PORT: "9042"
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    profiles:
+      - tools
+
   redis:
     image: redis:7-alpine
     ports:
