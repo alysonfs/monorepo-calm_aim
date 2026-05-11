@@ -21,6 +21,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 - `Dashboard.tsx`: `handleNovaSessao` navega para `/treino?sessaoId=:id`; cards de sessão exibem métricas quando disponíveis.
 - `Treino.tsx` reescrito como orquestrador da cena FPS (substituiu placeholder de cubo girando).
 
+### Fixed
+- Orientação da arma FPS: modelo GLB reexportado do Blender com cano apontando para -Z; `FpsRig.ts` usa `rotation.y = Math.PI` para alinhar com a câmera.
+- Near clipping plane reduzido de 0.1 para 0.02, eliminando artefatos de clipping no viewmodel.
+- CORS ao rodar localmente: `ALLOWED_ORIGIN=http://localhost:5173` adicionado ao `apps/api/.env.local`.
+
 ---
 
 ## [0.2.0] - 2026-05-08
