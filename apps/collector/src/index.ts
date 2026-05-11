@@ -13,6 +13,8 @@ function eventoZero(): EventoDualSense {
     conectado: false,
     acelerometro: { x: 0, y: 0, z: 0 },
     giroscopio: { x: 0, y: 0, z: 0 },
+    sticks: { esquerdo: { x: 0, y: 0 }, direito: { x: 0, y: 0 } },
+    triggers: { l2: 0, r2: 0 },
     botoes: {},
   };
 }
@@ -36,7 +38,7 @@ async function tentarConectarDualSense(): Promise<void> {
 
     console.log("[collector] DualSense instanciado, aguardando conexão...");
 
-    controller.on("input", (ctrl) => {
+    controller.on("change", (ctrl) => {
       const evento: EventoDualSense = {
         timestamp: Date.now(),
         conectado: ctrl.connection.active,
@@ -49,6 +51,20 @@ async function tentarConectarDualSense(): Promise<void> {
           x: ctrl.gyroscope.x.state,
           y: ctrl.gyroscope.y.state,
           z: ctrl.gyroscope.z.state,
+        },
+        sticks: {
+          esquerdo: {
+            x: ctrl.left.analog.x.state,
+            y: ctrl.left.analog.y.state,
+          },
+          direito: {
+            x: ctrl.right.analog.x.state,
+            y: ctrl.right.analog.y.state,
+          },
+        },
+        triggers: {
+          l2: ctrl.left.trigger.state,
+          r2: ctrl.right.trigger.state,
         },
         botoes: {
           cross: ctrl.cross.state,

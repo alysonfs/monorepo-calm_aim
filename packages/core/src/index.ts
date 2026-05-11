@@ -20,6 +20,11 @@ export interface EventoDualSense {
   conectado: boolean;
   acelerometro: { x: number; y: number; z: number };
   giroscopio: { x: number; y: number; z: number };
+  sticks: {
+    esquerdo: { x: number; y: number };
+    direito: { x: number; y: number };
+  };
+  triggers: { l2: number; r2: number };
   botoes: Record<string, boolean>;
 }
 
