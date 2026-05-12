@@ -58,14 +58,18 @@ WITH replication = {
 
 ```cql
 CREATE TABLE IF NOT EXISTS calm_aim.eventos_sessao (
-  sessao_id   uuid,
-  ts          timestamp,
-  tipo        text,     -- 'tiro' | 'acerto' | 'miss' | 'reload'
-  reacao_ms   int,      -- tempo de reação em milissegundos (nullable)
-  dificuldade float,    -- nível no momento do evento (0.0 – 1.0)
-  PRIMARY KEY (sessao_id, ts)
-) WITH CLUSTERING ORDER BY (ts DESC);
+  sessao_id   TEXT,
+  evento_id   TIMEUUID,           -- ID único ordenado por tempo
+  tipo        TEXT,               -- 'tiro' | 'acerto' | 'miss'
+  reacao_ms   INT,                -- tempo de reação em ms (0 para tiros errados)
+  dificuldade FLOAT,              -- nível no momento do evento (0.0 – 1.0)
+  distancia_m FLOAT,              -- distância câmera→alvo em unidades de cena (≈ metros)
+  criado_em   TIMESTAMP,
+  PRIMARY KEY (sessao_id, evento_id)
+) WITH CLUSTERING ORDER BY (evento_id DESC);
 ```
+
+> **`distancia_m`** é preenchido apenas nos acertos (tipo `acerto`). Para tiros errados fica `0`. Use para analisar competência por faixa de alcance: curto (< 5 m), médio (5–10 m), longo (> 10 m).
 
 ### `estado_emocional` — leituras de voz por sessão
 
@@ -169,17 +173,9 @@ UPDATE eventos_sessao SET tipo = 'acerto' WHERE ts > '2026-01-01';  -- sem parti
 docker exec -it calm_aim-cassandra-1 cqlsh
 ```
 
-### 2. cassandra-web (web UI no docker-compose)
+### 2. Cassandra Web UI via docker-compose
 
-Sobe junto com o stack de dev:
-
-```bash
-docker compose --profile tools up -d cassandra-web
-```
-
-Acesse em: **http://localhost:3200**
-
-> Imagem: `nicholasmoen/cassandra-web`. Se não funcionar, use as opções abaixo.
+> A imagem `nicholasmoen/cassandra-web` foi removida do Docker Hub. Use as opções abaixo.
 
 ### 3. TablePlus (melhor UX para macOS — free tier)
 
@@ -194,6 +190,70 @@ O suporte ao Cassandra via driver JDBC está disponível na CE:
 2. File → New Database Connection → Cassandra
 3. Configure o driver DataStax (download automático pelo DBeaver)
 4. Host: `localhost`, Port: `9042`
+
+---
+
+## Comandos DDL de Manutenção
+
+Use esses comandos quando o schema do projeto evoluir e o container Cassandra já tiver dados (o `CREATE TABLE IF NOT EXISTS` no init não altera tabelas existentes).
+
+### Executar sem abrir shell interativo
+
+```bash
+# Sintaxe geral
+docker exec calm_aim-cassandra-1 cqlsh -e "<CQL>"
+
+# Verificar schema atual de uma tabela
+docker exec calm_aim-cassandra-1 cqlsh -e "DESCRIBE TABLE calm_aim.eventos_sessao;"
+
+# Listar todas as tabelas do keyspace
+docker exec calm_aim-cassandra-1 cqlsh -e "DESCRIBE TABLES;" calm_aim
+
+# Verificar dados recentes
+docker exec calm_aim-cassandra-1 cqlsh -e "SELECT * FROM calm_aim.eventos_sessao LIMIT 5;"
+```
+
+### Adicionar coluna a tabela existente
+
+```bash
+docker exec calm_aim-cassandra-1 cqlsh -e \
+  "ALTER TABLE calm_aim.eventos_sessao ADD distancia_m float;"
+```
+
+> **Limitações do `ALTER TABLE` no Cassandra:**
+> - Pode **adicionar** colunas normais.
+> - **Não pode** remover, renomear ou alterar tipo de colunas existentes.
+> - **Não pode** alterar a `PRIMARY KEY` (partition key ou clustering columns).
+> - Se precisar mudar a PK, é necessário criar uma tabela nova e migrar os dados.
+
+### Remover uma coluna
+
+```bash
+# Cuidado: apaga todos os dados da coluna
+docker exec calm_aim-cassandra-1 cqlsh -e \
+  "ALTER TABLE calm_aim.eventos_sessao DROP nome_da_coluna;"
+```
+
+### Resetar schema completo (dev local — apaga tudo)
+
+```bash
+# 1. Apaga o keyspace inteiro
+docker exec calm_aim-cassandra-1 cqlsh -e "DROP KEYSPACE IF EXISTS calm_aim;"
+
+# 2. Recria a partir do arquivo de schema
+docker exec -i calm_aim-cassandra-1 cqlsh < apps/api/src/db/cassandra-schema.cql
+```
+
+### Shell interativo (para sessões longas de exploração)
+
+```bash
+docker exec -it calm_aim-cassandra-1 cqlsh
+# dentro do cqlsh:
+USE calm_aim;
+DESCRIBE TABLES;
+SELECT * FROM eventos_sessao LIMIT 10;
+exit
+```
 
 ---
 
