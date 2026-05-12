@@ -14,6 +14,13 @@ import { useMicrofone } from "../hooks/useMicrofone";
 import api from "../http/client";
 
 const MAX_DPR = 1;
+const MAX_CASSANDRA_LOG = 10;
+
+interface CassandraLogEntry {
+  ts: number;
+  table: string;
+  fields: Record<string, string | number>;
+}
 
 const overlayStyle: React.CSSProperties = {
   position: "absolute",
@@ -75,6 +82,24 @@ const creditStyle: React.CSSProperties = {
   pointerEvents: "none",
 };
 
+const cassandraLogStyle: React.CSSProperties = {
+  position: "absolute",
+  top: "3.5rem",
+  right: "1rem",
+  width: "230px",
+  background: "rgba(0,0,0,0.42)",
+  color: "#7dd3fc",
+  fontFamily: "monospace",
+  fontSize: "0.62rem",
+  lineHeight: "1.5",
+  zIndex: 10,
+  pointerEvents: "none",
+  borderRadius: "4px",
+  padding: "0.35rem 0.5rem",
+  backdropFilter: "blur(3px)",
+  border: "1px solid rgba(100,180,255,0.12)",
+};
+
 export default function Treino() {
   const mountRef = useRef<HTMLDivElement>(null);
   const trackerRef = useRef<MetricasTrackerResult>(createMetricasTracker());
@@ -89,6 +114,8 @@ export default function Treino() {
   const [hud, setHud] = useState({ tiros: 0, acertos: 0, precisao: 0 });
   const [dificuldade, setDificuldade] = useState(0.3);
   const [nivelEmocional, setNivelEmocional] = useState(0);
+  const [cassandraLog, setCassandraLog] = useState<CassandraLogEntry[]>([]);
+  const [tempoSessao, setTempoSessao] = useState(0);
   const dificuldadeRef = useRef(0.3);
 
   useEffect(() => {
@@ -104,6 +131,16 @@ export default function Treino() {
         /* Cassandra pode estar indisponível — continua com padrão */
       });
   }, [sessaoId]);
+
+  useEffect(() => {
+    if (!locked || ended) return;
+    const inicio = Date.now();
+    setTempoSessao(0);
+    const id = setInterval(() => {
+      setTempoSessao(Math.floor((Date.now() - inicio) / 1000));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [locked, ended]);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -175,12 +212,13 @@ export default function Treino() {
       tracker.registrarTiro();
       rig.play("Armature|Shoot");
 
-      const spawnedAt = targetSystem.checkHit(fps.camera, scene);
+      const hit = targetSystem.checkHit(fps.camera, scene);
       const reacaoMs =
-        spawnedAt !== null ? Math.round(performance.now() - spawnedAt) : 0;
-      const tipo = spawnedAt !== null ? "acerto" : "tiro";
+        hit !== null ? Math.round(performance.now() - hit.spawnedAt) : 0;
+      const tipo = hit !== null ? "acerto" : "tiro";
+      const distanciaM = hit !== null ? Math.round(hit.distancia * 10) / 10 : 0;
 
-      if (spawnedAt !== null) tracker.registrarAcerto(spawnedAt);
+      if (hit !== null) tracker.registrarAcerto(hit.spawnedAt);
 
       const m = tracker.calcular();
       setHud({ tiros: m.totalTiros, acertos: m.acertos, precisao: m.precisao });
@@ -191,11 +229,25 @@ export default function Treino() {
             tipo,
             reacaoMs,
             dificuldadeAtual: dificuldadeRef.current,
+            distanciaM,
           })
           .then(({ data }) => {
             dificuldadeRef.current = data.dificuldade;
             setDificuldade(data.dificuldade);
             targetSystem.setDificuldade(data.dificuldade);
+            setCassandraLog((prev) => [
+              {
+                ts: Date.now(),
+                table: "eventos_sessao",
+                fields: {
+                  tipo,
+                  reacao_ms: reacaoMs,
+                  dist_m: distanciaM,
+                  dificuldade: Number(data.dificuldade.toFixed(3)),
+                },
+              },
+              ...prev.slice(0, MAX_CASSANDRA_LOG - 1),
+            ]);
           })
           .catch(() => {
             /* motor indisponível */
@@ -231,9 +283,21 @@ export default function Treino() {
       emocaoInterval = setInterval(() => {
         const nivel = microfone.analyzer?.nivel() ?? 0;
         setNivelEmocional(nivel);
-        api.post(`/sessions/${sessaoId}/emocao`, { nivel }).catch(() => {
-          /* silencia */
-        });
+        api
+          .post(`/sessions/${sessaoId}/emocao`, { nivel })
+          .then(() => {
+            setCassandraLog((prev) => [
+              {
+                ts: Date.now(),
+                table: "estado_emocional",
+                fields: { nivel: Number(nivel.toFixed(3)) },
+              },
+              ...prev.slice(0, MAX_CASSANDRA_LOG - 1),
+            ]);
+          })
+          .catch(() => {
+            /* silencia */
+          });
       }, 5000);
     }
 
@@ -247,7 +311,7 @@ export default function Treino() {
 
       // Look do stick direito
       const [lx, ly] = getLookFromEvent(dualSenseRef.current);
-      if (lx !== 0 || ly !== 0) fps.applyControllerLook(lx, ly);
+      if (lx !== 0 || ly !== 0) fps.applyControllerLook(lx, ly, delta);
 
       // Disparo por R2 (gatilho analógico > 0.5 = pressão suficiente)
       const r2 = dualSenseRef.current?.triggers.r2 ?? 0;
@@ -298,25 +362,41 @@ export default function Treino() {
       {/* HUD */}
       {locked && !ended && (
         <div style={hudStyle}>
-          <div>
-            Tiros: {hud.tiros} | Acertos: {hud.acertos} | Precisão:{" "}
-            {hud.precisao.toFixed(1)}%
-          </div>
           <div
             style={{
-              marginTop: "0.35rem",
               display: "flex",
-              gap: "0.5rem",
-              alignItems: "center",
+              justifyContent: "space-between",
+              alignItems: "baseline",
+              gap: "1rem",
             }}
           >
-            <span style={{ color: "#aaa" }}>Dif:</span>
+            <span>
+              Tiros: {hud.tiros} | Acertos: {hud.acertos} | Precisão:{" "}
+              {hud.precisao.toFixed(1)}%
+            </span>
+            <span style={{ color: "#888", fontVariantNumeric: "tabular-nums" }}>
+              {String(Math.floor(tempoSessao / 60)).padStart(2, "0")}:
+              {String(tempoSessao % 60).padStart(2, "0")}
+            </span>
+          </div>
+
+          {/* Nível de dificuldade adaptativa */}
+          <div
+            style={{
+              marginTop: "0.4rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.4rem",
+            }}
+          >
+            <span style={{ color: "#666", fontSize: "0.75rem" }}>NÍVEL</span>
             <div
               style={{
-                width: 60,
-                height: 6,
-                background: "#333",
+                width: 72,
+                height: 5,
+                background: "#222",
                 borderRadius: 3,
+                overflow: "hidden",
               }}
             >
               <div
@@ -324,18 +404,70 @@ export default function Treino() {
                   width: `${dificuldade * 100}%`,
                   height: "100%",
                   background:
-                    dificuldade > 0.7
+                    dificuldade > 0.75
                       ? "#ef4444"
-                      : dificuldade > 0.4
+                      : dificuldade > 0.5
                         ? "#f59e0b"
-                        : "#22c55e",
+                        : dificuldade > 0.25
+                          ? "#84cc16"
+                          : "#22c55e",
                   borderRadius: 3,
-                  transition: "width 0.4s ease",
+                  transition: "width 0.5s ease",
                 }}
               />
             </div>
-            <span style={{ color: "#aaa", marginLeft: "0.5rem" }}>
-              {nivelEmocional > 0.6 ? "😤" : nivelEmocional > 0.3 ? "😐" : "😌"}
+            <span
+              style={{
+                color:
+                  dificuldade > 0.75
+                    ? "#ef4444"
+                    : dificuldade > 0.5
+                      ? "#f59e0b"
+                      : dificuldade > 0.25
+                        ? "#84cc16"
+                        : "#22c55e",
+                fontSize: "0.72rem",
+                fontWeight: 600,
+                letterSpacing: "0.04em",
+              }}
+            >
+              {dificuldade > 0.75
+                ? "ELITE"
+                : dificuldade > 0.5
+                  ? "AVANÇADO"
+                  : dificuldade > 0.25
+                    ? "MÉDIO"
+                    : "INICIANTE"}
+            </span>
+          </div>
+
+          {/* Tensão emocional (análise de voz) */}
+          <div
+            style={{
+              marginTop: "0.25rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              color: "#555",
+              fontSize: "0.75rem",
+            }}
+          >
+            <span>TENSÃO</span>
+            <span
+              style={{
+                color:
+                  nivelEmocional > 0.6
+                    ? "#ef4444"
+                    : nivelEmocional > 0.3
+                      ? "#f59e0b"
+                      : "#22c55e",
+              }}
+            >
+              {nivelEmocional > 0.6
+                ? "● Alta"
+                : nivelEmocional > 0.3
+                  ? "● Moderada"
+                  : "● Calmo"}
             </span>
           </div>
         </div>
@@ -408,6 +540,60 @@ export default function Treino() {
           <button style={btnStyle} onClick={() => navigate("/dashboard")}>
             Ver histórico
           </button>
+        </div>
+      )}
+
+      {/* Painel de debug Cassandra */}
+      {locked && !ended && cassandraLog.length > 0 && (
+        <div style={cassandraLogStyle}>
+          <div
+            style={{
+              color: "#475569",
+              marginBottom: "0.2rem",
+              letterSpacing: "0.05em",
+              textTransform: "uppercase",
+            }}
+          >
+            ▸ cassandra
+          </div>
+          {cassandraLog.map((entry, i) => (
+            <div
+              key={entry.ts + i}
+              style={{
+                opacity: Math.max(0.35, 1 - i * 0.09),
+                marginBottom: "0.1rem",
+              }}
+            >
+              <span style={{ color: "#334155" }}>
+                {new Date(entry.ts).toISOString().slice(11, 19)}
+              </span>{" "}
+              <span
+                style={{
+                  color:
+                    entry.table === "eventos_sessao" ? "#86efac" : "#fbbf24",
+                }}
+              >
+                {entry.table}
+              </span>{" "}
+              {Object.entries(entry.fields).map(([k, v]) => (
+                <span key={k}>
+                  <span style={{ color: "#4b6a8a" }}>{k}=</span>
+                  <span
+                    style={{
+                      color:
+                        k === "tipo" && v === "acerto"
+                          ? "#4ade80"
+                          : k === "tipo" && v === "tiro"
+                            ? "#f97316"
+                            : "#cbd5e1",
+                    }}
+                  >
+                    {String(v)}
+                  </span>{" "}
+                </span>
+              ))}
+            </div>
+          ))}
         </div>
       )}
 
