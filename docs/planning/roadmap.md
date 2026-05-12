@@ -16,6 +16,7 @@ Adultos que amam jogar FPS perdem performance com o tempo e consideram abandonar
 | M1 | Login + sessão de treino registrada no banco | ✅ Concluído |
 | M2 | Primeiro treino jogável + dados do DualSense ao vivo | ✅ Concluído |
 | M3 | Motor adaptativo + análise emocional por voz | ⚪ Não iniciado |
+| M4 | Sub-habilidades de mira, movimentação e reflexo | ⚪ Não iniciado |
 
 ---
 
@@ -166,11 +167,79 @@ Adultos que amam jogar FPS perdem performance com o tempo e consideram abandonar
 
 ---
 
+---
+
+## M4 — Sub-habilidades de Mira, Movimentação e Reflexo
+
+**Status:** ⚪ Não iniciado  
+**Critério de conclusão:** o jogador consegue escolher um foco de treino (flick, tracking, reativo ou switching), o motor adapta a dificuldade por dimensão independente, e ao fim da sessão recebe um resumo com proficiência por sub-habilidade e p50/p90 de reação.  
+**Depende de:** M3 concluído.
+
+**Por quê:** Mira não é uma habilidade única. O AimLabs (referência principal do setor) demonstra que flicking, tracking, tempo reativo e switching de alvo evoluem de forma independente. Treinar sem distinguir esses eixos é o equivalente a ir à academia e fazer exercícios aleatórios — volume sem direção. O M4 transforma o Calm Aim num treinador com prática dirigida, respeitando o princípio de sobrecarga progressiva por sub-habilidade.
+
+### Tipos de alvo e modo híbrido
+
+- [ ] `flick` — alvo estacionário em posição aleatória, sem movimento. Treina deslocamento rápido e preciso da mira para ponto fixo
+- [ ] `tracking` — alvo com trajetória suave e contínua. Treina manter crosshair em alvo móvel
+- [ ] `reativo` — alvo estacionário com janela curta (configurável) antes de sumir. Treina tempo de reação puro
+- [ ] `switching` — 2–3 alvos simultâneos; acerto elimina um e spawna outro em posição diferente. Treina troca rápida de alvo
+- [ ] Seleção de foco pelo jogador antes da sessão (`flick | tracking | reativo | switching | automático`)
+- [ ] Motor híbrido: peso base definido pelo foco + sobre-representação do subtipo com menor proficiência detectada
+
+### Métricas refinadas de mira
+
+- [ ] Capturar `distanciaMiss` e `direcaoMiss` (`overshoot | undershoot | lateral`) por cada tiro que erra
+- [ ] `MetricasTracker` rastreia precisão separada por subtipo de alvo
+- [ ] Distribuição de reação: `p50`, `p90`, desvio padrão (substituindo só a média)
+- [ ] `tendenciaReacao`: slope linear dos últimos 10 acertos — crescente indica fadiga
+
+### Métricas de movimentação
+
+- [ ] `FpsControls` expõe `velocidadeAtual` normalizada (0–1) ao `MetricasTracker`
+- [ ] Distinguir `precisaoParado` vs `precisaoEmMovimento` por sessão
+- [ ] Motor reduz dificuldade de tracking quando `precisaoEmMovimento < precisaoParado × 0.6`
+
+### Motor adaptativo multi-dimensional
+
+- [ ] `dificuldade` vira objeto com dimensões independentes: `velocidadeAlvo`, `tamanhoAlvo`, `janelaReacaoMs`, `qtdSimultaneos`
+- [ ] Regras de ajuste por sub-habilidade (últimos 15 eventos por tipo):
+  - `precisaoFlick > 80%` → reduz `tamanhoAlvo`
+  - `precisaoTracking < 40%` → reduz `velocidadeAlvo`
+  - `p90Reacao > 700ms` → aumenta `janelaReacaoMs` e enfatiza tipo reativo
+  - `taxaOvershoot > 50%` → reduz `velocidadeAlvo` + `tamanhoAlvo` (mira agressiva demais)
+  - Fadiga detectada (`tendenciaReacao` crescente por 20s) → reduz todas as dimensões
+- [ ] Resposta da API inclui `subHabilidadeFoco` para o frontend biesar o spawn
+
+### HUD e feedback visual
+
+- [ ] Anel de proximidade no alvo mais próximo quando `distanciaMiss < limiar` — feedback imediato de "quase acertou"
+- [ ] Barras de proficiência por sub-habilidade atualizando ao vivo na sessão
+- [ ] Indicador de `p50` de reação ao vivo (atualiza a cada 5 acertos)
+- [ ] Ícone de tendência de reação: seta para cima = fadiga, seta estável = OK
+
+### Modelo de dados e API (Cassandra)
+
+- [ ] Expandir `eventos_sessao`: novos campos `subtipo`, `velocidade_jogador`, `distancia_miss`, `direcao_miss`
+- [ ] Nova tabela `metricas_sessao_final`: `p50_reacao`, `p90_reacao`, `desvio_reacao`, `precisao_flick`, `precisao_tracking`, `precisao_reativo`, `precisao_switching`, `precisao_parado`, `precisao_em_movimento`
+- [ ] `POST /sessions/:id/finalizar` — calcula e persiste `metricas_sessao_final`
+- [ ] `GET /sessions/:id/metricas` — retorna resumo da sessão para tela de resultado
+- [ ] Atualizar `POST /sessions/:id/eventos`: corpo inclui `subtipo`, `velocidadeJogador`, `distanciaMiss`, `direcaoMiss`; resposta inclui objeto `dificuldade` multi-dimensional + `subHabilidadeFoco`
+
+### Testes
+
+- [ ] Unitários para motor M4: cada regra de ajuste por sub-habilidade
+- [ ] Unitários para cálculo de distribuição de reação (`p50`, `p90`, tendência)
+- [ ] Integração para `POST /sessions/:id/eventos` com campos M4 e `POST /sessions/:id/finalizar`
+
+---
+
 ## Fora de escopo (por ora)
 
 - Autenticação social (Google / Discord OAuth) — backlog pós-M1
 - Gatilhos adaptativos hápticos do DualSense — backlog pós-M2
 - Sugestão de gatilho ideal (R1 vs R2) — backlog pós-M3
+- Modelo de ML para classificação de emoção — backlog pós-M4
+- Múltiplos perfis de dificuldade por usuário — backlog pós-M4
 - Deploy em produção (Fly.io / Railway / VPS) — backlog
 - Aplicativo nativo para PlayStation Store — visão de longo prazo
 - Qualquer modo multijogador ou comparação entre usuários
