@@ -15,7 +15,7 @@ Adultos que amam jogar FPS perdem performance com o tempo e consideram abandonar
 | M0 | Monorepo + infra local rodando | ✅ Concluído |
 | M1 | Login + sessão de treino registrada no banco | ✅ Concluído |
 | M2 | Primeiro treino jogável + dados do DualSense ao vivo | ✅ Concluído |
-| M3 | Motor adaptativo + análise emocional por voz | ⚪ Não iniciado |
+| M3 | Motor adaptativo + análise emocional por voz | ✅ Concluído |
 | M4 | Sub-habilidades de mira, movimentação e reflexo | ⚪ Não iniciado |
 
 ---
@@ -123,47 +123,46 @@ Adultos que amam jogar FPS perdem performance com o tempo e consideram abandonar
 
 ## M3 — Motor Adaptativo + Análise Emocional
 
-**Status:** ⚪ Não iniciado
+**Status:** ✅ Concluído
 **Critério de conclusão:** dificuldade ajusta automaticamente com base em performance e estado emocional detectado por voz.
 **Depende de:** M2 concluído.
 
 ### Infraestrutura Cassandra
 
-- [ ] Criar script de inicialização do keyspace `calm_aim` e tabelas (`eventos_sessao`, `estado_emocional`, `metricas_dificuldade`)
-- [ ] Adicionar inicialização automática do schema ao subir o container (volume bind ou init script)
-- [ ] Conectar `apps/api` ao Cassandra via `cassandra-driver` (DataStax)
-- [ ] Variáveis de ambiente: `CASSANDRA_HOST`, `CASSANDRA_DATACENTER`, `CASSANDRA_KEYSPACE`
+- [x] Criar script de inicialização do keyspace `calm_aim` e tabelas (`eventos_sessao`, `estado_emocional`, `metricas_dificuldade`)
+- [x] Adicionar inicialização automática do schema ao subir o container (`cassandra-init` service no docker-compose)
+- [x] Conectar `apps/api` ao Cassandra via `cassandra-driver` (DataStax)
+- [x] Variáveis de ambiente: `CASSANDRA_HOST`, `CASSANDRA_DATACENTER`, `CASSANDRA_KEYSPACE`
 
 ### Motor Adaptativo (`apps/api`)
 
-- [ ] Definir escala de dificuldade: `float` 0.0–1.0 mapeado para velocidade, tamanho e frequência dos alvos
-- [ ] Use case `calcularDificuldade(historico)` — regras baseadas em precisão e tempo de reação dos últimos N eventos
-- [ ] Use case `registrarEventoSessao(sessaoId, tipo, reacaoMs, dificuldade)` — grava em `eventos_sessao` no Cassandra
-- [ ] `GET /sessions/:id/dificuldade` — retorna dificuldade atual da sessão
-- [ ] `POST /sessions/:id/eventos` — recebe lote de eventos do frontend e persiste no Cassandra
-- [ ] Testes unitários para `calcularDificuldade`
+- [x] Definir escala de dificuldade: `float` 0.0–1.0 mapeado para velocidade, tamanho e frequência dos alvos
+- [x] Use case `calcularDificuldade(historico)` — regras baseadas em precisão e tempo de reação dos últimos N eventos
+- [x] Use case `registrarEventoSessao(sessaoId, tipo, reacaoMs, dificuldade)` — grava em `eventos_sessao` no Cassandra
+- [x] `GET /sessions/:id/dificuldade` — retorna dificuldade atual da sessão
+- [x] `POST /sessions/:id/eventos` — recebe evento do frontend e retorna nova dificuldade calculada
+- [x] Testes unitários para `calcularDificuldade`
 
 ### Análise Emocional por Voz (`apps/web`)
 
-- [ ] Hook `useMicrofone` — solicita permissão, instancia `AudioContext` e `AnalyserNode`
-- [ ] Módulo `VozAnalyzer` — analisa volume RMS e frequência dominante a cada 500ms
-- [ ] Heurística local de estresse: volume alto + frequência >300Hz sustentada = sinal de estresse
-- [ ] Hook `useEstadoEmocional(analyzer)` — publica nível emocional (0–1) via callback sem re-renders
-- [ ] Integração no loop de Treino: envia leitura emocional ao backend a cada 5s
-- [ ] `POST /sessions/:id/emocao` — recebe leitura e persiste em `estado_emocional` no Cassandra
+- [x] Hook `useMicrofone` — solicita permissão, instancia `AudioContext` e `AnalyserNode`
+- [x] Módulo `VozAnalyzer` — analisa volume RMS e frequência dominante a cada 500ms
+- [x] Heurística local de estresse: volume alto + frequência >300Hz sustentada = sinal de estresse
+- [x] Integração no loop de Treino: envia leitura emocional ao backend a cada 5s
+- [x] `POST /sessions/:id/emocao` — recebe leitura e persiste em `estado_emocional` no Cassandra
 
 ### Integração Frontend ↔ Motor Adaptativo
 
-- [ ] Frontend consulta `GET /sessions/:id/dificuldade` ao iniciar sessão
-- [ ] Motor envia nova dificuldade como resposta ao `POST /sessions/:id/eventos` quando há ajuste
-- [ ] `FpsControls` e sistema de alvos consomem nível de dificuldade: velocidade dos alvos, tamanho, frequência de spawn
-- [ ] HUD exibe indicador de estado emocional (ícone calmo/alerta) e nível de dificuldade atual
+- [x] Frontend consulta `GET /sessions/:id/dificuldade` ao iniciar sessão
+- [x] Motor envia nova dificuldade como resposta ao `POST /sessions/:id/eventos` quando há ajuste
+- [x] `TargetSystem` consome dificuldade via `setDificuldade(d)`: velocidade, tamanho e intervalo de spawn dos alvos. Controles do jogador (`FpsControls`, `FpsCamera`) são invariáveis — ver ADR [2026-05-12]
+- [x] HUD exibe barra de dificuldade (verde/amarelo/vermelho) e ícone de estado emocional
 
 ### Testes
 
-- [ ] Testes unitários para `calcularDificuldade` (cenários: melhora contínua, queda brusca, estável)
-- [ ] Testes unitários para `VozAnalyzer` (mocks de AnalyserNode)
-- [ ] Testes de integração para `POST /sessions/:id/eventos` e `POST /sessions/:id/emocao`
+- [x] Testes unitários para `calcularDificuldade` (cenários: melhora contínua, queda brusca, estável, limites)
+- [x] Testes unitários para `registrarEventoSessao` e `registrarEmocao`
+- [x] Testes unitários para `VozAnalyzer` (mocks de AudioContext/AnalyserNode)
 
 ---
 

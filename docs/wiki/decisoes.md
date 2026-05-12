@@ -108,4 +108,16 @@ O package `@calm-aim/core` centraliza também entidades de domínio, enums, valu
 
 O agente `@backend` ao criar um endpoint e o agente `@front` ao consumir um endpoint devem, ambos, referenciar o tipo de `@calm-aim/core`. Se o tipo não existir, criá-lo antes de implementar.
 
+---
+
+## [2026-05-12] Dificuldade adaptativa afeta somente o comportamento dos alvos
+
+**Contexto:** Durante testes iniciais do motor adaptativo (M3), o jogador percebeu que seu "feeling" de mira e movimentação piorava conforme a dificuldade aumentava — uma sensação de estar sendo "sabotado" pelos próprios controles. O motor ajusta velocidade e tamanho dos alvos em resposta à performance, o que naturalmente torna a mira mais difícil; porém, havia risco de o motor influenciar também parâmetros de câmera ou movimento do jogador, o que seria uma experiência degradante e antinatural.
+
+**Decisão:** A escala de dificuldade do motor adaptativo **atua exclusivamente no `TargetSystem`**: velocidade dos alvos, raio (tamanho), intervalo de spawn e, futuramente, padrão de trajetória. Parâmetros do jogador — sensibilidade da câmera, velocidade de movimentação, deadzone dos sticks — são **invariáveis** e pertencem ao perfil do jogador (M5), nunca ao motor adaptativo. `FpsControls` e `FpsCamera` não recebem nem consomem `dificuldade` em nenhuma circunstância.
+
+**Justificativa:** O objetivo do treino é desafiar o jogador com alvos mais difíceis de acertar, não degradar a responsividade dos seus controles. Alterar controles como mecanismo de dificuldade seria equivalente a um academia reduzir a eficiência das máquinas de musculação em vez de aumentar o peso — mina a confiança do atleta no equipamento.
+
+**Consequência:** Qualquer pull request que passe `dificuldade` para `FpsControls`, `FpsCamera` ou `useDualSense` deve ser recusado. O agente `@front` deve verificar essa invariante ao implementar M4+.
+
 **Consequência:** Qualquer divergência de campo vira erro de compilação TypeScript em ambos os apps, antes de qualquer teste ou build Docker. Custo: disciplina de manter `packages/core/` atualizado a cada novo endpoint.
