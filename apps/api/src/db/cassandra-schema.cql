@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS eventos_sessao (
   tipo        TEXT,   -- 'tiro' | 'acerto' | 'miss'
   reacao_ms   INT,
   dificuldade FLOAT,
+  distancia_m FLOAT,  -- distância câmera→alvo em unidades de cena (≈ metros); 0 para tiros errados
   criado_em   TIMESTAMP,
   PRIMARY KEY (sessao_id, evento_id)
 ) WITH CLUSTERING ORDER BY (evento_id DESC);

@@ -5,6 +5,7 @@ export interface RegistrarEventoInput {
   sessaoId: string;
   tipo: "tiro" | "acerto" | "miss";
   reacaoMs: number;
+  distanciaM: number;
 }
 
 export interface RegistrarEventoOutput {
@@ -20,6 +21,7 @@ export async function registrarEventoSessao(
     sessaoId: input.sessaoId,
     tipo: input.tipo,
     reacaoMs: input.reacaoMs,
+    distanciaM: input.distanciaM,
     dificuldade: dificuldadeAtual,
   });
 

@@ -137,10 +137,11 @@ router.post(
   "/:id/eventos",
   requireAuth,
   async (req: Request, res: Response): Promise<void> => {
-    const { tipo, reacaoMs, dificuldadeAtual } = req.body as {
+    const { tipo, reacaoMs, dificuldadeAtual, distanciaM } = req.body as {
       tipo: unknown;
       reacaoMs: unknown;
       dificuldadeAtual: unknown;
+      distanciaM: unknown;
     };
     if (
       (tipo !== "tiro" && tipo !== "acerto" && tipo !== "miss") ||
@@ -151,7 +152,12 @@ router.post(
       return;
     }
     const result = await registrarEventoSessao(
-      { sessaoId: req.params["id"] as string, tipo, reacaoMs },
+      {
+        sessaoId: req.params["id"] as string,
+        tipo,
+        reacaoMs,
+        distanciaM: typeof distanciaM === "number" ? distanciaM : 0,
+      },
       getEventoSessaoRepo(),
       dificuldadeAtual,
     );

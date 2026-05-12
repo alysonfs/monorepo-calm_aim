@@ -12,9 +12,13 @@ export interface TargetSystemResult {
   setDificuldade(d: number): void;
   /**
    * Verifica hit por raycast a partir da câmera.
-   * Retorna timestamp de spawn do alvo atingido (para calcular reação) ou null.
+   * Retorna `{ spawnedAt, distancia }` do alvo atingido ou `null` se errou.
+   * `distancia` é em unidades de cena (1 unidade ≈ 1 metro).
    */
-  checkHit(camera: THREE.Camera, scene: THREE.Scene): number | null;
+  checkHit(
+    camera: THREE.Camera,
+    scene: THREE.Scene,
+  ): { spawnedAt: number; distancia: number } | null;
   dispose(scene: THREE.Scene): void;
 }
 
@@ -103,6 +107,7 @@ export function createTargetSystem(scene: THREE.Scene): TargetSystemResult {
       if (!hits.length || !hits[0]) return null;
 
       const hitMesh = hits[0].object as THREE.Mesh;
+      const distancia = hits[0].distance;
       const idx = targets.findIndex((t) => t.mesh === hitMesh);
       if (idx === -1) return null;
 
@@ -112,7 +117,7 @@ export function createTargetSystem(scene: THREE.Scene): TargetSystemResult {
       ((hitMesh as THREE.Mesh).material as THREE.Material).dispose();
       targets.splice(idx, 1);
 
-      return spawnedAt;
+      return { spawnedAt, distancia };
     },
 
     dispose(scene) {

@@ -7,6 +7,7 @@ export interface EventoSessao {
   tipo: "tiro" | "acerto" | "miss";
   reacaoMs: number;
   dificuldade: number;
+  distanciaM: number;
   criadoEm: Date;
 }
 
@@ -29,10 +30,16 @@ export class EventoSessaoCassandraRepo implements EventoSessaoRepoContract {
   async registrarEvento(evento: Omit<EventoSessao, "criadoEm">): Promise<void> {
     const client = getCassandraClient();
     await client.execute(
-      `INSERT INTO ${KS}.eventos_sessao (sessao_id, evento_id, tipo, reacao_ms, dificuldade, criado_em)
-       VALUES (?, now(), ?, ?, ?, toTimestamp(now()))`,
+      `INSERT INTO ${KS}.eventos_sessao (sessao_id, evento_id, tipo, reacao_ms, dificuldade, distancia_m, criado_em)
+       VALUES (?, now(), ?, ?, ?, ?, toTimestamp(now()))`,
 
-      [evento.sessaoId, evento.tipo, evento.reacaoMs, evento.dificuldade],
+      [
+        evento.sessaoId,
+        evento.tipo,
+        evento.reacaoMs,
+        evento.dificuldade,
+        evento.distanciaM,
+      ],
       { prepare: true },
     );
   }
@@ -54,6 +61,7 @@ export class EventoSessaoCassandraRepo implements EventoSessaoRepoContract {
       tipo: row["tipo"] as "tiro" | "acerto" | "miss",
       reacaoMs: row["reacao_ms"] as number,
       dificuldade: row["dificuldade"] as number,
+      distanciaM: (row["distancia_m"] as number | null) ?? 0,
       criadoEm: row["criado_em"] as Date,
     }));
   }
