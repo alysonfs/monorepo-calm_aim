@@ -8,11 +8,20 @@ export interface FpsCameraResult {
   lock(): void;
   /** Remove listeners e libera recursos */
   dispose(): void;
-  /** Aplica entrada do stick direito do DualSense */
-  applyControllerLook(dx: number, dy: number): void;
+  /** Aplica entrada do stick direito do DualSense (delta em segundos) */
+  applyControllerLook(dx: number, dy: number, delta?: number): void;
 }
 
-const STICK_SENSITIVITY = 0.04;
+/** Velocidade máxima de rotação em radianos por segundo (deflexão total). */
+const STICK_SENSITIVITY = 2.4;
+/** Zona morta do stick de look — valores abaixo são ignorados. */
+const LOOK_DEADZONE = 0.05;
+
+function applyDeadzone(value: number): number {
+  if (Math.abs(value) < LOOK_DEADZONE) return 0;
+  const sign = value > 0 ? 1 : -1;
+  return (sign * (Math.abs(value) - LOOK_DEADZONE)) / (1 - LOOK_DEADZONE);
+}
 
 export function createFpsCamera(canvas: HTMLElement): FpsCameraResult {
   const camera = new THREE.PerspectiveCamera(
@@ -44,13 +53,15 @@ export function createFpsCamera(canvas: HTMLElement): FpsCameraResult {
     lock() {
       canvas.requestPointerLock();
     },
-    applyControllerLook(dx: number, dy: number) {
-      camera.rotation.y -= dx * STICK_SENSITIVITY;
+    applyControllerLook(dx: number, dy: number, delta = 1 / 60) {
+      const fdx = applyDeadzone(dx);
+      const fdy = applyDeadzone(dy);
+      camera.rotation.y -= fdx * STICK_SENSITIVITY * delta;
       camera.rotation.x = Math.max(
         -Math.PI / 2 + 0.05,
         Math.min(
           Math.PI / 2 - 0.05,
-          camera.rotation.x + dy * STICK_SENSITIVITY,
+          camera.rotation.x + fdy * STICK_SENSITIVITY * delta,
         ),
       );
     },
