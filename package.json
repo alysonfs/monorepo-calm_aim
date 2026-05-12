@@ -9,7 +9,7 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "dev:local": "docker compose up -d mongo redis && turbo run dev",
+    "dev:local": "docker compose up -d mongo redis cassandra cassandra-init && turbo run dev",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
