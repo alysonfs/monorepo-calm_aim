@@ -10,6 +10,7 @@ import {
   type MetricasTrackerResult,
 } from "../game/MetricasTracker";
 import { useDualSense } from "../hooks/useDualSense";
+import { useMicrofone } from "../hooks/useMicrofone";
 import api from "../http/client";
 
 const MAX_DPR = 1;
@@ -81,10 +82,28 @@ export default function Treino() {
   const [searchParams] = useSearchParams();
   const sessaoId = searchParams.get("sessaoId");
   const dualSenseRef = useDualSense();
+  const microfone = useMicrofone();
 
   const [locked, setLocked] = useState(false);
   const [ended, setEnded] = useState(false);
   const [hud, setHud] = useState({ tiros: 0, acertos: 0, precisao: 0 });
+  const [dificuldade, setDificuldade] = useState(0.3);
+  const [nivelEmocional, setNivelEmocional] = useState(0);
+  const dificuldadeRef = useRef(0.3);
+
+  useEffect(() => {
+    // Busca dificuldade inicial da sessão
+    if (!sessaoId) return;
+    api
+      .get<{ dificuldade: number }>(`/sessions/${sessaoId}/dificuldade`)
+      .then(({ data }) => {
+        dificuldadeRef.current = data.dificuldade;
+        setDificuldade(data.dificuldade);
+      })
+      .catch(() => {
+        /* Cassandra pode estar indisponível — continua com padrão */
+      });
+  }, [sessaoId]);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -148,9 +167,8 @@ export default function Treino() {
 
     // --- shoot ---
     let shotCooldown = 0;
-    const onMouseDown = (e: MouseEvent) => {
-      if (e.button !== 0) return;
-      if (document.pointerLockElement !== renderer.domElement) return;
+
+    function disparar() {
       if (shotCooldown > 0) return;
       shotCooldown = 200;
 
@@ -158,12 +176,37 @@ export default function Treino() {
       rig.play("Armature|Shoot");
 
       const spawnedAt = targetSystem.checkHit(fps.camera, scene);
-      if (spawnedAt !== null) {
-        tracker.registrarAcerto(spawnedAt);
-      }
+      const reacaoMs =
+        spawnedAt !== null ? Math.round(performance.now() - spawnedAt) : 0;
+      const tipo = spawnedAt !== null ? "acerto" : "tiro";
+
+      if (spawnedAt !== null) tracker.registrarAcerto(spawnedAt);
 
       const m = tracker.calcular();
       setHud({ tiros: m.totalTiros, acertos: m.acertos, precisao: m.precisao });
+
+      if (sessaoId) {
+        api
+          .post<{ dificuldade: number }>(`/sessions/${sessaoId}/eventos`, {
+            tipo,
+            reacaoMs,
+            dificuldadeAtual: dificuldadeRef.current,
+          })
+          .then(({ data }) => {
+            dificuldadeRef.current = data.dificuldade;
+            setDificuldade(data.dificuldade);
+            targetSystem.setDificuldade(data.dificuldade);
+          })
+          .catch(() => {
+            /* motor indisponível */
+          });
+      }
+    }
+
+    const onMouseDown = (e: MouseEvent) => {
+      if (e.button !== 0) return;
+      if (document.pointerLockElement !== renderer.domElement) return;
+      disparar();
     };
     document.addEventListener("mousedown", onMouseDown);
 
@@ -175,12 +218,24 @@ export default function Treino() {
     };
     window.addEventListener("resize", onResize);
 
-    // --- visibility pause ---
+    // --- visibilidade ---
     const onVisibility = () => {
       if (document.hidden) renderer.setAnimationLoop(null);
       else renderer.setAnimationLoop(loop);
     };
     document.addEventListener("visibilitychange", onVisibility);
+
+    // --- envio de emoção a cada 5s ---
+    let emocaoInterval: ReturnType<typeof setInterval> | null = null;
+    if (sessaoId) {
+      emocaoInterval = setInterval(() => {
+        const nivel = microfone.analyzer?.nivel() ?? 0;
+        setNivelEmocional(nivel);
+        api.post(`/sessions/${sessaoId}/emocao`, { nivel }).catch(() => {
+          /* silencia */
+        });
+      }, 5000);
+    }
 
     // --- loop ---
     const clock = new THREE.Clock();
@@ -197,18 +252,8 @@ export default function Treino() {
       // Disparo por R2 (gatilho analógico > 0.5 = pressão suficiente)
       const r2 = dualSenseRef.current?.triggers.r2 ?? 0;
       const r2Pressed = r2 > 0.5;
-      if (r2Pressed && !r2WasPressed && shotCooldown <= 0) {
-        shotCooldown = 200;
-        tracker.registrarTiro();
-        rig.play("Armature|Shoot");
-        const spawnedAt = targetSystem.checkHit(fps.camera, scene);
-        if (spawnedAt !== null) tracker.registrarAcerto(spawnedAt);
-        const m = tracker.calcular();
-        setHud({
-          tiros: m.totalTiros,
-          acertos: m.acertos,
-          precisao: m.precisao,
-        });
+      if (r2Pressed && !r2WasPressed) {
+        disparar();
       }
       r2WasPressed = r2Pressed;
 
@@ -220,6 +265,7 @@ export default function Treino() {
 
     return () => {
       renderer.setAnimationLoop(null);
+      if (emocaoInterval) clearInterval(emocaoInterval);
       document.removeEventListener("pointerlockchange", onLockChange);
       document.removeEventListener("mousedown", onMouseDown);
       document.removeEventListener("visibilitychange", onVisibility);
@@ -252,8 +298,46 @@ export default function Treino() {
       {/* HUD */}
       {locked && !ended && (
         <div style={hudStyle}>
-          Tiros: {hud.tiros} | Acertos: {hud.acertos} | Precisão:{" "}
-          {hud.precisao.toFixed(1)}%
+          <div>
+            Tiros: {hud.tiros} | Acertos: {hud.acertos} | Precisão:{" "}
+            {hud.precisao.toFixed(1)}%
+          </div>
+          <div
+            style={{
+              marginTop: "0.35rem",
+              display: "flex",
+              gap: "0.5rem",
+              alignItems: "center",
+            }}
+          >
+            <span style={{ color: "#aaa" }}>Dif:</span>
+            <div
+              style={{
+                width: 60,
+                height: 6,
+                background: "#333",
+                borderRadius: 3,
+              }}
+            >
+              <div
+                style={{
+                  width: `${dificuldade * 100}%`,
+                  height: "100%",
+                  background:
+                    dificuldade > 0.7
+                      ? "#ef4444"
+                      : dificuldade > 0.4
+                        ? "#f59e0b"
+                        : "#22c55e",
+                  borderRadius: 3,
+                  transition: "width 0.4s ease",
+                }}
+              />
+            </div>
+            <span style={{ color: "#aaa", marginLeft: "0.5rem" }}>
+              {nivelEmocional > 0.6 ? "😤" : nivelEmocional > 0.3 ? "😐" : "😌"}
+            </span>
+          </div>
         </div>
       )}
 
