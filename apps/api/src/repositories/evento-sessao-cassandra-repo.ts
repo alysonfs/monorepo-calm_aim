@@ -1,5 +1,7 @@
 import { getCassandraClient } from "../db/cassandra.js";
 
+const KS = process.env["CASSANDRA_KEYSPACE"] ?? "calm_aim";
+
 export interface EventoSessao {
   sessaoId: string;
   tipo: "tiro" | "acerto" | "miss";
@@ -27,8 +29,9 @@ export class EventoSessaoCassandraRepo implements EventoSessaoRepoContract {
   async registrarEvento(evento: Omit<EventoSessao, "criadoEm">): Promise<void> {
     const client = getCassandraClient();
     await client.execute(
-      `INSERT INTO eventos_sessao (sessao_id, evento_id, tipo, reacao_ms, dificuldade, criado_em)
+      `INSERT INTO ${KS}.eventos_sessao (sessao_id, evento_id, tipo, reacao_ms, dificuldade, criado_em)
        VALUES (?, now(), ?, ?, ?, toTimestamp(now()))`,
+
       [evento.sessaoId, evento.tipo, evento.reacaoMs, evento.dificuldade],
       { prepare: true },
     );
@@ -41,7 +44,8 @@ export class EventoSessaoCassandraRepo implements EventoSessaoRepoContract {
     const client = getCassandraClient();
     const result = await client.execute(
       `SELECT sessao_id, tipo, reacao_ms, dificuldade, criado_em
-       FROM eventos_sessao WHERE sessao_id = ? LIMIT ?`,
+       FROM ${KS}.eventos_sessao WHERE sessao_id = ? LIMIT ?`,
+
       [sessaoId, limite],
       { prepare: true },
     );
@@ -57,8 +61,9 @@ export class EventoSessaoCassandraRepo implements EventoSessaoRepoContract {
   async registrarEmocao(leitura: LeituraEmocional): Promise<void> {
     const client = getCassandraClient();
     await client.execute(
-      `INSERT INTO estado_emocional (sessao_id, lido_em, nivel)
+      `INSERT INTO ${KS}.estado_emocional (sessao_id, lido_em, nivel)
        VALUES (?, now(), ?)`,
+
       [leitura.sessaoId, leitura.nivel],
       { prepare: true },
     );
@@ -70,8 +75,9 @@ export class EventoSessaoCassandraRepo implements EventoSessaoRepoContract {
   ): Promise<void> {
     const client = getCassandraClient();
     await client.execute(
-      `INSERT INTO metricas_dificuldade (sessao_id, calculado_em, dificuldade)
+      `INSERT INTO ${KS}.metricas_dificuldade (sessao_id, calculado_em, dificuldade)
        VALUES (?, now(), ?)`,
+
       [sessaoId, dificuldade],
       { prepare: true },
     );

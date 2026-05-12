@@ -9,12 +9,10 @@ export function getCassandraClient(): cassandra.Client {
     ",",
   );
   const localDataCenter = process.env["CASSANDRA_DATACENTER"] ?? "datacenter1";
-  const keyspace = process.env["CASSANDRA_KEYSPACE"] ?? "calm_aim";
 
   client = new cassandra.Client({
     contactPoints,
     localDataCenter,
-    keyspace,
   });
 
   return client;
