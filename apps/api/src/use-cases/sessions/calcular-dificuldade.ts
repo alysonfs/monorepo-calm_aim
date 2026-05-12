@@ -6,12 +6,14 @@ const AJUSTE_SUBIDA = 0.05;
 const AJUSTE_DESCIDA = 0.08;
 const JANELA_EVENTOS = 10;
 
-// precisão mínima p/ aumentar dificuldade
+// precisão mínima para aumentar dificuldade
 const LIMIAR_PRECISAO_ALTA = 0.75;
-// precisão máxima p/ reduzir dificuldade
+// precisão máxima para reduzir dificuldade
 const LIMIAR_PRECISAO_BAIXA = 0.35;
-// reação lenta em ms → reduz dificuldade
-const LIMIAR_REACAO_LENTA = 600;
+// reação lenta em ms → penaliza independente da precisão
+// mede tempo desde spawn do alvo (inclui tempo de percepção + mira),
+// portanto o limiar precisa ser bem maior que em cenários de reação pura
+const LIMIAR_REACAO_LENTA = 2500;
 
 export interface HistoricoParaMotor {
   eventos: EventoSessao[];
@@ -38,15 +40,14 @@ export function calcularDificuldade(
 
   let nova = dificuldadeAtual;
 
-  if (
-    precisao >= LIMIAR_PRECISAO_ALTA &&
-    tempoMedioReacao < LIMIAR_REACAO_LENTA
-  ) {
+  if (precisao >= LIMIAR_PRECISAO_ALTA) {
     nova = Math.min(DIFICULDADE_MAX, nova + AJUSTE_SUBIDA);
-  } else if (
-    precisao <= LIMIAR_PRECISAO_BAIXA ||
-    tempoMedioReacao >= LIMIAR_REACAO_LENTA
-  ) {
+  } else if (precisao <= LIMIAR_PRECISAO_BAIXA) {
+    nova = Math.max(DIFICULDADE_MIN, nova - AJUSTE_DESCIDA);
+  }
+
+  // reação lenta penaliza independente da precisão
+  if (acertos.length > 0 && tempoMedioReacao >= LIMIAR_REACAO_LENTA) {
     nova = Math.max(DIFICULDADE_MIN, nova - AJUSTE_DESCIDA);
   }
 

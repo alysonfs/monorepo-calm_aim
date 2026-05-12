@@ -12,7 +12,8 @@ export async function getDificuldadeAtual(
   repo: EventoSessaoRepoContract,
 ): Promise<DificuldadeAtualOutput> {
   const eventos = await repo.listarUltimosEventos(sessaoId, 1);
+  const ultimaDificuldade = eventos.length > 0 ? eventos[0]!.dificuldade : 0;
   const dificuldade =
-    eventos.length > 0 ? eventos[0]!.dificuldade : DIFICULDADE_INICIAL;
+    ultimaDificuldade > 0 ? ultimaDificuldade : DIFICULDADE_INICIAL;
   return { sessaoId, dificuldade };
 }
