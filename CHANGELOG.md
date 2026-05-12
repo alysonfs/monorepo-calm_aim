@@ -7,6 +7,38 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## [0.5.0] - 2026-05-12
+
+> M3 concluído: motor adaptativo de dificuldade e análise emocional por voz.
+> A dificuldade dos alvos ajusta-se automaticamente ao desempenho do jogador
+> em tempo real; sinais de estresse captados pelo microfone enriquecem o
+> perfil da sessão sem enviar áudio ao servidor.
+
+### Added
+- Conexão ao Cassandra com graceful degradation — API sobe mesmo sem o banco disponível.
+- Schema CQL automático via `cassandra-init` no `docker compose up` (tabelas `eventos_sessao`, `estado_emocional`, `metricas_dificuldade`).
+- `EventoSessaoCassandraRepo`: registra eventos, emoção e dificuldade em série temporal.
+- Use case `calcularDificuldade`: janela de 10 eventos, ajuste ±0.05/0.08, clamp [0, 1].
+- Use case `registrarEventoSessao`: persiste evento e devolve nova dificuldade calculada.
+- Use case `getDificuldadeAtual`: retorna dificuldade da sessão (padrão 0.3 se sem histórico).
+- Use case `registrarEmocao`: persiste nível emocional [0, 1] com validação de range.
+- Rotas `GET /sessions/:id/dificuldade`, `POST /sessions/:id/eventos`, `POST /sessions/:id/emocao`.
+- `VozAnalyzer`: heurística RMS + FFT >300 Hz para estimativa de estresse, 100% local (Web Audio API).
+- Hook `useMicrofone`: solicita permissão de microfone e inicia análise automática com cleanup.
+- `TargetSystem.setDificuldade(d)`: velocidade, raio e spawn interval escalados por lerp [0, 1].
+- HUD do treino: barra de dificuldade colorida (verde → vermelho) e ícone emocional.
+- Variáveis `CASSANDRA_HOST`, `CASSANDRA_DATACENTER`, `CASSANDRA_KEYSPACE` no `.env.example`.
+- 15 novos testes unitários (8 `calcularDificuldade`, 3 `registrarEventoSessao`, 4 `registrarEmocao`; 6 `VozAnalyzer`).
+
+### Changed
+- `Treino.tsx`: busca dificuldade inicial ao entrar, envia evento a cada tiro, leitura emocional a cada 5 s.
+- `apps/api/src/index.ts`: refatorado para `async start()` com `connectCassandra()` em try/catch.
+
+### Fixed
+- ADR registrado: dificuldade afeta **somente** `TargetSystem`; `FpsControls` e `FpsCamera` são imutáveis.
+
+---
+
 ## [0.4.0] - 2026-05-11
 
 > Suporte completo ao DualSense no treino FPS. Sticks analógicos controlam
