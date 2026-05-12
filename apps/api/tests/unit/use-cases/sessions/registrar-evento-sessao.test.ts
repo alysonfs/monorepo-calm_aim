@@ -14,7 +14,7 @@ describe("registrarEventoSessao", () => {
   it("deve chamar registrarEvento com os dados corretos", async () => {
     const repo = makeRepo();
     await registrarEventoSessao(
-      { sessaoId: "s1", tipo: "acerto", reacaoMs: 300 },
+      { sessaoId: "s1", tipo: "acerto", reacaoMs: 300, distanciaM: 0 },
       repo,
       0.3,
     );
@@ -26,7 +26,7 @@ describe("registrarEventoSessao", () => {
   it("deve retornar a nova dificuldade calculada", async () => {
     const repo = makeRepo();
     const { dificuldade } = await registrarEventoSessao(
-      { sessaoId: "s1", tipo: "tiro", reacaoMs: 0 },
+      { sessaoId: "s1", tipo: "tiro", reacaoMs: 0, distanciaM: 0 },
       repo,
       0.5,
     );
@@ -40,11 +40,12 @@ describe("registrarEventoSessao", () => {
       tipo: "acerto" as const,
       reacaoMs: 150,
       dificuldade: 0.3,
+      distanciaM: 5,
       criadoEm: new Date(),
     }));
     const repo = makeRepo(eventos);
     await registrarEventoSessao(
-      { sessaoId: "s1", tipo: "acerto", reacaoMs: 150 },
+      { sessaoId: "s1", tipo: "acerto", reacaoMs: 150, distanciaM: 5 },
       repo,
       0.3,
     );

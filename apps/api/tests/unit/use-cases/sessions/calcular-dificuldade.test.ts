@@ -7,6 +7,7 @@ function makeEvento(tipo: "tiro" | "acerto" | "miss", reacaoMs = 300): EventoSes
     tipo,
     reacaoMs,
     dificuldade: 0.3,
+    distanciaM: 0,
     criadoEm: new Date(),
   };
 }
@@ -42,9 +43,9 @@ describe("calcularDificuldade", () => {
 
   it("deve reduzir dificuldade com reação lenta mesmo com precisão ok", () => {
     const eventos = [
-      makeEvento("acerto", 700),
-      makeEvento("acerto", 750),
-      makeEvento("acerto", 720),
+      makeEvento("acerto", 2600),
+      makeEvento("acerto", 2800),
+      makeEvento("acerto", 2700),
     ];
     const resultado = calcularDificuldade({ eventos }, 0.4);
     expect(resultado).toBeLessThan(0.4);
