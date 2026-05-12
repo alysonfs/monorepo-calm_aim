@@ -12,6 +12,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      cassandra-init:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "/nodejs/bin/node", "-e", "require('http').get('http://localhost:3001/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
@@ -50,6 +52,16 @@ services:
       interval: 60s
       timeout: 30s
       retries: 10
+
+  cassandra-init:
+    image: cassandra:4.1
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    volumes:
+      - ./apps/api/src/db/cassandra-schema.cql:/schema.cql
+    command: cqlsh cassandra -f /schema.cql
+    restart: "no"
 
   cassandra-web:
     image: nicholasmoen/cassandra-web

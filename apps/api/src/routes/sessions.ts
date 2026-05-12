@@ -15,6 +15,10 @@ import {
   AcessoNegadoError as EncerrarAcessoNegado,
   SessaoJaEncerradaError,
 } from "../use-cases/sessions/encerrar-sessao.js";
+import { registrarEventoSessao } from "../use-cases/sessions/registrar-evento-sessao.js";
+import { getDificuldadeAtual } from "../use-cases/sessions/get-dificuldade-atual.js";
+import { registrarEmocao } from "../use-cases/sessions/registrar-emocao.js";
+import { getEventoSessaoRepo } from "../repositories/evento-sessao-cassandra-repo.js";
 import { container } from "../container/index.js";
 import { TOKENS } from "../container/tokens.js";
 import type { SessaoRepoContract } from "../repositories/sessao-mongo-repo.js";
@@ -110,6 +114,69 @@ router.get(
       }
       if (e instanceof AcessoNegadoError) {
         res.status(403).json({ message: "Acesso negado" });
+        return;
+      }
+      throw e;
+    }
+  },
+);
+
+router.get(
+  "/:id/dificuldade",
+  requireAuth,
+  async (req: Request, res: Response): Promise<void> => {
+    const result = await getDificuldadeAtual(
+      req.params["id"] as string,
+      getEventoSessaoRepo(),
+    );
+    res.json(result);
+  },
+);
+
+router.post(
+  "/:id/eventos",
+  requireAuth,
+  async (req: Request, res: Response): Promise<void> => {
+    const { tipo, reacaoMs, dificuldadeAtual } = req.body as {
+      tipo: unknown;
+      reacaoMs: unknown;
+      dificuldadeAtual: unknown;
+    };
+    if (
+      (tipo !== "tiro" && tipo !== "acerto" && tipo !== "miss") ||
+      typeof reacaoMs !== "number" ||
+      typeof dificuldadeAtual !== "number"
+    ) {
+      res.status(400).json({ message: "corpo inválido" });
+      return;
+    }
+    const result = await registrarEventoSessao(
+      { sessaoId: req.params["id"] as string, tipo, reacaoMs },
+      getEventoSessaoRepo(),
+      dificuldadeAtual,
+    );
+    res.json(result);
+  },
+);
+
+router.post(
+  "/:id/emocao",
+  requireAuth,
+  async (req: Request, res: Response): Promise<void> => {
+    const { nivel } = req.body as { nivel: unknown };
+    if (typeof nivel !== "number") {
+      res.status(400).json({ message: "nivel deve ser número entre 0 e 1" });
+      return;
+    }
+    try {
+      await registrarEmocao(
+        { sessaoId: req.params["id"] as string, nivel },
+        getEventoSessaoRepo(),
+      );
+      res.status(204).send();
+    } catch (e) {
+      if (e instanceof RangeError) {
+        res.status(400).json({ message: e.message });
         return;
       }
       throw e;

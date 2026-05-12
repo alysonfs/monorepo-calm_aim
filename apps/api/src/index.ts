@@ -5,6 +5,7 @@ loadEnv({ path: ".env" });
 import cors from "cors";
 import express from "express";
 import { connectMongo } from "./db/mongo.js";
+import { connectCassandra } from "./db/cassandra.js";
 import authRouter from "./routes/auth.js";
 import sessionsRouter from "./routes/sessions.js";
 
@@ -22,15 +23,24 @@ app.get("/health", (_req, res) => {
 app.use("/auth", authRouter);
 app.use("/sessions", sessionsRouter);
 
-connectMongo()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`[api] Servidor rodando na porta ${PORT}`);
-    });
-  })
-  .catch((err: unknown) => {
-    console.error("[api] Falha ao conectar ao MongoDB:", err);
-    process.exit(1);
+async function start() {
+  await connectMongo();
+  try {
+    await connectCassandra();
+  } catch (err) {
+    console.warn(
+      "[api] Cassandra indisponível — motor adaptativo desabilitado:",
+      (err as Error).message,
+    );
+  }
+  app.listen(PORT, () => {
+    console.log(`[api] Servidor rodando na porta ${PORT}`);
   });
+}
+
+start().catch((err: unknown) => {
+  console.error("[api] Falha ao iniciar:", err);
+  process.exit(1);
+});
 
 export default app;
