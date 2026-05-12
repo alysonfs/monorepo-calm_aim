@@ -77,6 +77,27 @@
 
 ---
 
+## [2026-05-12] Calibração de sticks do DualSense: software, não firmware
+
+**Contexto:** Controles DualSense usam potenciômetros ALPS que degradam com o uso, causando dois problemas mensuráveis: (1) **drift** — o stick reporta valor diferente de zero em repouso (ex.: LY = -0.01961, RY = -0.00392 medidos via Gamepad API); (2) **erro de circularidade** — a trajetória ao girar o stick descreve uma elipse em vez de um círculo, indicando desgaste mecânico assimétrico do potenciômetro (Avg Error % como exibido pelo GuliKit controller test). Controles com uso intenso apresentam erro de circularidade de 8–12%. Isso afeta diretamente a precisão de mira em FPS.
+
+**O que aprendemos:**
+- Drift é detectável automaticamente: coletar ~200 amostras em repouso e calcular `offsetX`/`offsetY` médios por stick. Esses são os valores AXIS 0/1/2/3 que ferramentas como GuliKit e dualshock-tools expõem.
+- Erro de circularidade é detectável: registrar a trajetória de um giro completo do stick e calcular o desvio padrão do raio em relação ao raio médio. Indica desgaste mecânico — não corrigível por software.
+- A deadzone atual do projeto (`STICK_DEADZONE = 0.15` axial em `FpsControls.ts`) é o tipo mais inadequado para FPS: cria zona morta em forma de cruz por eixo. O stick direito (mira) não tem deadzone alguma.
+- A deadzone ideal para FPS é **radial escalada**: (1) testa a magnitude do vetor `(x,y)` em vez de cada eixo separado; (2) remapeia o intervalo `[dz..1] → [0..1]`, eliminando o salto de velocidade ao cruzar o limiar.
+- A deadzone ótima para cada controle é calculada como `max(|offsetX|, |offsetY|) × 1.5 + margem_segurança` — não um valor fixo global.
+
+**Decisão:** Calibração via **software** — offset subtraído em runtime no collector antes do broadcast, sem alterar o firmware. O collector ([`apps/collector/src/index.ts`](../../apps/collector/src/index.ts)) é o ponto correto de aplicação do offset por ser a camada mais baixa: todos os consumidores (jogo, tela de calibração, debug) recebem dados já corrigidos. Perfil de calibração salvo no MongoDB por usuário.
+
+**Ferramentas de referência consultadas:**
+- [GuliKit Controller Test](https://test.gulikit.com) — modelo visual para diagnóstico de LX/LY/RX/RY e teste de circularidade com Avg Error %
+- [dualshock-tools](https://dualshock-tools.github.io) — referência de interface de calibração guiada para DualSense/DualShock via WebHID
+
+**Consequência:** O M5 implementa tela "Configuração do Controle" com: SVG interativo do DualSense reativo ao input físico (botões acendem, sticks movem o dot, triggers preenchem proporcionalmente); diagnóstico automático em 3 fases (repouso → circularidade → alcance); deadzone radial escalada configurada por perfil; mapeamento de botões com sugestões adaptativas baseadas em dados de sessão (M4+).
+
+---
+
 ## [2026-05-08] Contrato de campos HTTP definido pelo package `@calm-aim/core`
 
 **Contexto:** O frontend enviava `{ email, senha }` no body do login/register enquanto a API esperava `{ email, password }`. O erro passou despercebido porque os dois lados foram desenvolvidos de forma independente, sem um contrato compartilhado entre eles.
