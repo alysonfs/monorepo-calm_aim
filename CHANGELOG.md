@@ -7,6 +7,29 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## [0.4.1] - 2025-05-12
+
+### Fixed
+- Corrigido drift constante do stick direito (R3): adicionada zona morta de 15% com remapeamento suave e sensibilidade em rad/s escalada por delta time.
+- Corrigido motor adaptativo nunca aumentar dificuldade: `LIMIAR_REACAO_LENTA` ajustado de 600 ms para 2500 ms (medição parte do spawn do alvo, não da visão do jogador).
+- Corrigida contaminação de dificuldade zero: sessões antigas com `dificuldade=0` no Cassandra não afetam mais novas sessões (fallback para 0.3).
+
+### Added
+- Campo `distancia_m` em `eventos_sessao` no Cassandra para análise de desempenho por faixa de alcance.
+- Painel de debug Cassandra no HUD (canto superior direito) mostrando os últimos 10 eventos gravados.
+- Timer de sessão ao vivo no HUD em formato MM:SS.
+- Indicador de nível adaptativo com tiers nomeados: INICIANTE / MÉDIO / AVANÇADO / ELITE.
+- Indicador de tensão emocional separado da barra de dificuldade.
+
+### Changed
+- Lógica do motor adaptativo: precisão e reação agora são condições independentes — alta precisão sobe a dificuldade por conta própria; reação lenta reduz separadamente.
+- `dev:local` inclui `cassandra` e `cassandra-init` no `docker compose up`.
+
+### Removed
+- Serviço `cassandra-web` removido do docker-compose (imagem não existe mais no Docker Hub).
+
+---
+
 ## [0.5.0] - 2026-05-12
 
 > M3 concluído: motor adaptativo de dificuldade e análise emocional por voz.
