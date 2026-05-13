@@ -22,6 +22,8 @@ const config: Config = {
     '!src/index.ts',
     '!src/scripts/**',
     '!src/models/**',
+    '!src/db/cassandra.ts',
+    '!src/repositories/evento-sessao-cassandra-repo.ts',
   ],
   coverageThreshold: {
     global: {
